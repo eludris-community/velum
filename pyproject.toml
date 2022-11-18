@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "velum"
+version = "0.1.0"
+description = ""
+authors = ["Chromosomologist <chromosomologist@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiohttp = "^3.8.3"
+typing-extensions = "^4.4.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.17.1"
+pyright = "^1.1.280"
+isort = "^5.10.1"
+black = "^22.10.0"
+flake8 = "^5.0.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+force_single_line = true
+skip_glob = "**/__init__.pyi"
+
+[tool.pyright]
+include = ["velum"]  # "examples"
+exclude = ["**/__init__.py"]
+pythonVersion = "3.10"
+typeCheckingMode = "strict"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
