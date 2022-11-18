@@ -153,6 +153,7 @@ class GatewayHandler:
     __slots__ = (
         "_connection_event",
         "_gateway_ws",
+        "_is_closing",
         "_keep_alive_task",
         "_last_heartbeat",
         "_last_heartbeat_ack",
@@ -172,6 +173,7 @@ class GatewayHandler:
         self._connection_event = None
         self._gateway_ws = None
         self._keep_alive_task = None
+        self._is_closing = False
         self._last_heartbeat = float("nan")
         self._last_heartbeat_ack = float("nan")
         self._logger = logging.getLogger("velum.gateway")
@@ -179,7 +181,7 @@ class GatewayHandler:
 
     async def start(self) -> None:
         if self._connection_event:
-            raise RuntimeError("Cannot start an already connected GatewayConnection.")
+            raise RuntimeError("Cannot start an already connected GatewayHandler.")
 
         self._connection_event = asyncio.Event()
 
@@ -200,8 +202,23 @@ class GatewayHandler:
 
         self._keep_alive_task = keep_alive_task
 
-    def close(self) -> None:
-        ...  # TODO: implement
+    async def close(self) -> None:
+        if not self._keep_alive_task:
+            raise RuntimeError("Cannot close an inactive GatewayHandler")
+
+        if self._is_closing:
+            # Repeated call of this method. Wait for the keep-alive task to finish and just return.
+            await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
+            return
+
+        self._logger.info("Attempting to close gateway connection...")
+        self._is_closing = True
+
+        await async_utils.cancel_futures((self._keep_alive_task,))
+
+        self._keep_alive_task = None
+        self._is_closing = False
+        self._logger.info("Gateway connection closed successfully.")
 
     async def _poll_events(self) -> None:
         assert self._gateway_ws is not None
@@ -253,7 +270,7 @@ class GatewayHandler:
                 )
 
             except asyncio.CancelledError:
-                # TODO: implement closing logic
+                self._is_closing = True
                 return
 
             except Exception as exc:
