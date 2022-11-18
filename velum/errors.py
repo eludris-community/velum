@@ -29,3 +29,9 @@ class GatewayConnectionClosedError(GatewayError):
 
     def __str__(self) -> str:
         return f"Server closed connection with code {self.code} ({self.reason})"
+
+
+@attr.define(auto_exc=True, repr=False, slots=False)
+class HTTPError(VelumError):
+
+    message: str = attr.field()
