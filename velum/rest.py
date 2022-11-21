@@ -4,6 +4,7 @@ import typing
 import aiohttp
 import typing_extensions
 
+from velum import entity_factory
 from velum import errors
 from velum import models
 from velum import routes
@@ -13,10 +14,13 @@ _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 
 class RESTClient:
-    def __init__(self, *, rest_url: typing.Optional[str] = None):
+    def __init__(
+        self, *, rest_url: typing.Optional[str] = None, entity_factory: entity_factory.EntityFactory
+    ):
         # TODO: make unshittified
-        self._session = aiohttp.ClientSession()
+        self._entity_factory = entity_factory
         self._rest_url = rest_url or _REST_URL
+        self._session = aiohttp.ClientSession()
 
     async def close(self) -> None:
         await self._session.close()
@@ -89,4 +93,4 @@ class RESTClient:
 
     async def get_instance_info(self) -> models.InstanceInfo:
         response = await self._request(routes.GET_INFO.compile())
-        return models.InstanceInfo(**response)
+        return self._entity_factory.deserialize_instance_info(response)
