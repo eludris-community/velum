@@ -1,13 +1,12 @@
 import types
 import typing
-import typing_extensions
 
 import aiohttp
+import typing_extensions
 
 from velum import errors
 from velum import models
 from velum import routes
-
 
 _REST_URL: typing.Final[str] = "https://eludris.tooty.xyz/"
 _APPLICATION_JSON: typing.Final[str] = "application/json"

@@ -1,5 +1,6 @@
-import attr
 import typing
+
+import attr
 
 
 @attr.define(kw_only=True, weakref_slot=False)

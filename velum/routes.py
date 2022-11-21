@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import attr
 import typing
+
+import attr
 
 
 @attr.define(hash=True, weakref_slot=False)

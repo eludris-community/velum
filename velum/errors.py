@@ -1,5 +1,6 @@
-import attr
 import typing
+
+import attr
 
 
 @attr.define(auto_exc=True, repr=False, init=False, slots=False)

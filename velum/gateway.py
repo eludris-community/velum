@@ -9,14 +9,13 @@ import typing
 
 import aiohttp
 
-from velum import async_utils
 from velum import errors
 from velum import rate_limits
 from velum import typing_patches
+from velum.internal import async_utils
 
-# TODO: Make and move to event handler
-from velum import models
-
+if typing.TYPE_CHECKING:
+    from velum import event_manager_base
 
 _BACKOFF_WINDOW: typing.Final[float] = 15.0
 _GATEWAY_URL: typing.Final[str] = "wss://eludris.tooty.xyz/ws/"
@@ -152,6 +151,7 @@ class GatewayHandler:
 
     __slots__ = (
         "_connection_event",
+        "_event_manager",
         "_gateway_ws",
         "_is_closing",
         "_keep_alive_task",
@@ -162,6 +162,7 @@ class GatewayHandler:
     )
 
     _connection_event: typing.Optional[asyncio.Event]
+    _event_manager: event_manager_base.EventManagerBase
     _gateway_ws: typing.Optional[GatewayWebsocket]
     _keep_alive_task: typing.Optional[asyncio.Task[None]]
     _last_heartbeat: float
@@ -169,7 +170,9 @@ class GatewayHandler:
     _logger: logging.Logger
     _started_at: float
 
-    def __init__(self):
+    def __init__(self, event_manager: event_manager_base.EventManagerBase):
+        self._event_manager = event_manager
+
         self._connection_event = None
         self._gateway_ws = None
         self._keep_alive_task = None
@@ -227,14 +230,12 @@ class GatewayHandler:
         while True:
             payload = await self._gateway_ws.receive_json()
 
-            # TODO: Wait for eludris to get proper payloads mmlol
-            #       for now, every payload is a message.
+            # NOTE: Currently the only event dispatched by eludris.
+            #       Waiting on a proper payload implementation so we can get tje
+            #       event name from the actual payload.
+            event_name = "MESSAGE_CREATE"
 
-            # TODO: Implement event handler and dispatch raw payloads to the handler
-            #       instead of handling them here.
-
-            message = models.Message(**payload)
-            self._logger.info(message)
+            self._event_manager.consume_raw_event(event_name, self, payload)
 
     # TODO: make backoff protocol, replace typehint with proto
     async def _keep_alive(self, backoff: rate_limits.ExponentialBackoff) -> None:
