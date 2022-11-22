@@ -11,8 +11,8 @@ import aiohttp
 
 from velum import errors
 from velum import rate_limits
-from velum import typing_patches
 from velum.internal import async_utils
+from velum.internal import typing_patches
 
 if typing.TYPE_CHECKING:
     from velum import event_manager_base
