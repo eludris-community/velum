@@ -285,7 +285,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
             except errors.GatewayConnectionError as exc:
                 self._logger.warning(
-                    "Failed to communicate with the gateway, with reason %s. "
+                    "Failed to communicate with the gateway, with reason '%s'. "
                     "Attempting to reconnect shortly...",
                     exc.reason,
                 )
