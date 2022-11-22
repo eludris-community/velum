@@ -13,14 +13,15 @@ from velum import gateway
 from velum.events import base_events
 from velum.internal import async_utils
 
+EventPredicateT = typing.Callable[[base_events.EventT], bool]
+
 if typing.TYPE_CHECKING:
-    _EventPredicateT = typing.Callable[[base_events.EventT], bool]
     _ListenerMapT = typing.Dict[
         typing.Type[base_events.EventT],
         typing.List[base_events.EventCallbackT[base_events.EventT]],
     ]
     _WaiterPairT = typing.Tuple[
-        typing.Optional[_EventPredicateT[base_events.EventT]],
+        typing.Optional[EventPredicateT[base_events.EventT]],
         asyncio.Future[base_events.EventT],
     ]
     _WaiterMapT = typing.Dict[
@@ -413,7 +414,7 @@ class EventManagerBase:
         /,
         *,
         timeout: typing.Optional[float | int] = None,
-        predicate: typing.Optional[_EventPredicateT[base_events.EventT]] = None,
+        predicate: typing.Optional[EventPredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
         waiter_set: typing.MutableSet[_WaiterPairT[base_events.Event]]

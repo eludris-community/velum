@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import time
@@ -6,6 +8,7 @@ import typing
 from velum import entity_factory
 from velum import event_factory
 from velum import event_manager
+from velum import event_manager_base
 from velum import gateway
 from velum import rest
 from velum.events import base_events
@@ -47,46 +50,6 @@ class GatewayBot:
 
         # Setup state.
         self._closing_event: typing.Optional[asyncio.Event] = None
-
-    @property
-    def entity_factory(self) -> entity_factory.EntityFactory:
-        return self._entity_factory
-
-    @property
-    def event_factory(self) -> event_factory.EventFactory:
-        return self._event_factory
-
-    @property
-    def event_manager(self) -> event_manager.EventManager:
-        return self._event_manager
-
-    @property
-    def rest(self) -> rest.RESTClient:
-        return self._rest
-
-    @property
-    def gateway(self) -> gateway.GatewayHandler:
-        return self._gateway
-
-    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
-        return self._event_manager.dispatch(event)
-
-    def get_listeners(
-        self,
-        event_type: typing.Type[base_events.EventT],
-        /,
-        *,
-        polymorphic: bool = True,
-    ) -> typing.Collection[base_events.EventCallbackT[base_events.EventT]]:
-        return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
-
-    def listen(
-        self, *event_types: typing.Type[base_events.EventT]
-    ) -> typing.Callable[
-        [base_events.EventCallbackT[base_events.EventT]],
-        base_events.EventCallbackT[base_events.EventT],
-    ]:
-        return self._event_manager.listen(*event_types)
 
     async def start(self) -> None:
         if self._closing_event:
@@ -136,3 +99,70 @@ class GatewayBot:
         self._closing_event = None
 
         _LOGGER.info("Bot closed successfully.")
+
+    @property
+    def entity_factory(self) -> entity_factory.EntityFactory:
+        return self._entity_factory
+
+    @property
+    def event_factory(self) -> event_factory.EventFactory:
+        return self._event_factory
+
+    @property
+    def event_manager(self) -> event_manager.EventManager:
+        return self._event_manager
+
+    @property
+    def rest(self) -> rest.RESTClient:
+        return self._rest
+
+    @property
+    def gateway(self) -> gateway.GatewayHandler:
+        return self._gateway
+
+    @property
+    def is_alive(self) -> bool:
+        return self._closing_event is not None
+
+    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+        return self._event_manager.dispatch(event)
+
+    def get_listeners(
+        self,
+        event_type: typing.Type[base_events.EventT],
+        /,
+        *,
+        polymorphic: bool = True,
+    ) -> typing.Collection[base_events.EventCallbackT[base_events.EventT]]:
+        return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
+
+    def listen(
+        self, *event_types: typing.Type[base_events.EventT]
+    ) -> typing.Callable[
+        [base_events.EventCallbackT[base_events.EventT]],
+        base_events.EventCallbackT[base_events.EventT],
+    ]:
+        return self._event_manager.listen(*event_types)
+
+    def subscribe(
+        self,
+        event_type: typing.Type[base_events.EventT],
+        callback: base_events.EventCallbackT[base_events.EventT],
+    ) -> None:
+        self._event_manager.subscribe(event_type, callback)
+
+    def unsubscribe(
+        self,
+        event_type: typing.Type[base_events.EventT],
+        callback: base_events.EventCallbackT[base_events.EventT],
+    ) -> None:
+        self._event_manager.unsubscribe(event_type, callback)
+
+    async def wait_for(
+        self,
+        event_type: typing.Type[base_events.EventT],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[event_manager_base.EventPredicateT[base_events.EventT]] = None,
+    ) -> base_events.EventT:
+        return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)
