@@ -6,9 +6,9 @@ import attr
 @attr.define(kw_only=True, weakref_slot=False)
 class Message:
 
-    content: str = attr.field()
-
     author: str = attr.field()
+
+    content: str = attr.field()
 
 
 @attr.define(kw_only=True, weakref_slot=False)

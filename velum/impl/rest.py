@@ -120,7 +120,10 @@ class RESTClient(rest_trait.RESTClient):
                 "content": message,
             }
         else:
-            raise RuntimeError("idk yet")
+            raise TypeError(
+                f"Please provide either a fully qualified {models.Message.__qualname__}, "
+                "or an author and a message string."
+            )
 
         await self._request(routes.POST_MESSAGE.compile(), json=body)
 

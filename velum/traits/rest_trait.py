@@ -25,17 +25,17 @@ class RESTClient(typing.Protocol):
         ...
 
     @typing.overload
-    async def send_message(self, message: models.Message) -> None:
+    async def send_message(self, *, message: models.Message) -> None:
         ...
 
     @typing.overload
-    async def send_message(self, message: str, author: str) -> None:
+    async def send_message(self, author: str, message: str) -> None:
         ...
 
     async def send_message(
         self,
-        message: models.Message | str,
         author: typing.Optional[str] = None,
+        message: typing.Optional[models.Message | str] = None,
     ) -> None:
         ...
 
