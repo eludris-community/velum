@@ -23,6 +23,15 @@ _HEARTBEAT_INTERVAL: typing.Final[float] = 20.0
 
 
 class GatewayWebsocket:
+
+    __slots__ = (
+        "_gateway_url",
+        "_logger",
+        "_ws",
+        "_exit_stack",
+        "_closed",
+    )
+
     def __init__(
         self,
         *,

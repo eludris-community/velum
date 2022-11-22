@@ -15,6 +15,12 @@ _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 class RESTClient:
 
+    __slots__ = (
+        "_entity_factory",
+        "_rest_url",
+        "_session",
+    )
+
     _session: typing.Optional[aiohttp.ClientSession]
 
     def __init__(

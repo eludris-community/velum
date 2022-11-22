@@ -21,6 +21,16 @@ _LOGGER = logging.getLogger("velum.bot")
 
 
 class GatewayBot:
+
+    __slots__ = (
+        "_entity_factory",
+        "_event_factory",
+        "_event_manager",
+        "_rest",
+        "_gateway",
+        "_closing_event",
+    )
+
     def __init__(
         self,
         rest_url: typing.Optional[str] = None,

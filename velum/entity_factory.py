@@ -4,6 +4,9 @@ from velum import models
 
 
 class EntityFactory:
+
+    __slots__ = ()
+
     def deserialize_message(self, payload: typing.Dict[str, typing.Any]) -> models.Message:
         return models.Message(content=payload["content"], author=payload["author"])
 

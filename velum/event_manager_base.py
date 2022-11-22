@@ -164,14 +164,16 @@ class _BoundConsumer(typing.Generic[_EventManagerBaseT]):
 
 class EventManagerBase:
 
+    __slots__ = ("_consumers", "_listeners", "_waiters")
+
     _consumers: typing.Dict[str, _BoundConsumer[typing_extensions.Self]]
-    _listeners: _ListenerMapT[base_events.Event]
     _waiters: _WaiterMapT[base_events.Event]
+    _listeners: _ListenerMapT[base_events.Event]
 
     def __init__(self):
+        self._consumers = {}
         self._listeners = {}
         self._waiters = {}
-        self._consumers = {}
 
         for name, member in inspect.getmembers(self):
             if not name.startswith("on_"):
