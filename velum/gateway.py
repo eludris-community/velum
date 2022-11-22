@@ -313,7 +313,9 @@ class GatewayHandler:
 
         assert self._connection_event is not None
 
-        self._gateway_ws = await GatewayWebsocket.connect(logger=self._logger, url=self._gateway_url)
+        self._gateway_ws = await GatewayWebsocket.connect(
+            logger=self._logger, url=self._gateway_url
+        )
 
         heartbeat_task = asyncio.create_task(self._heartbeat(), name="heartbeat")
         poll_events_task = asyncio.create_task(self._poll_events(), name="poll events")

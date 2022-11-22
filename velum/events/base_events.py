@@ -7,7 +7,7 @@ import attr
 
 from velum.internal import class_utils
 
-__all__: typing.Sequence[str] = ("Event",)
+__all__: typing.Sequence[str] = ("Event", "ExceptionEvent")
 
 
 EventT = typing.TypeVar("EventT", bound="Event")
