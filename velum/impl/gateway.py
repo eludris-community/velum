@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import json  # TODO: remove
 import logging
 import time
 import typing
@@ -12,6 +11,7 @@ import aiohttp
 from velum import errors
 from velum.impl import rate_limits
 from velum.internal import async_utils
+from velum.internal import data_binding
 from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
 from velum.traits import rate_limit_trait
@@ -117,7 +117,7 @@ class GatewayWebsocket:
         await self._ws.ping()
 
     async def send_json(self, data: typing.Mapping[str, typing.Any]) -> None:
-        payload = json.dumps(data)  # TODO: provide entrypoint to change json loads/dumps funcs
+        payload = data_binding.dump_json(data)
 
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("Sending payload with size %s:\n\t%s", len(payload), payload)
@@ -130,7 +130,7 @@ class GatewayWebsocket:
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("Received payload with size %s:\n\t%s", len(payload), payload)
 
-        return json.loads(payload)  # TODO: provide entrypoint to change json loads/dumps funcs
+        return data_binding.load_json(payload)
 
     async def _receive_and_validate_text(self) -> str:
         message = typing.cast("_WSMessage", await self._ws.receive())
