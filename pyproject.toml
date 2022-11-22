@@ -51,5 +51,6 @@ exclude-classes = """
 (
     ^velum\\.internal\\.typing_patches:WSMessage$
     |^velum\\.internal\\.class_utils:classmethod$
+    |^velum\\.internal\\.data_binding:(_JSONLoader|_JSONDumper)$
 )
 """

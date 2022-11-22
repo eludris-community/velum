@@ -1,7 +1,6 @@
-import typing
-
 from velum.events import message_events
 from velum.impl import event_manager_base
+from velum.internal import data_binding
 from velum.traits import event_factory_trait
 from velum.traits import gateway_trait
 
@@ -18,7 +17,7 @@ class EventManager(event_manager_base.EventManagerBase):
     async def on_message_create(
         self,
         gateway_connection: gateway_trait.GatewayHandler,
-        payload: typing.Dict[str, typing.Any],
+        payload: data_binding.JSONObject,
     ) -> None:
         await self.dispatch(
             self._event_factory.deserialize_message_create_event(gateway_connection, payload)

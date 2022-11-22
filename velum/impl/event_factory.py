@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing
-
 from velum.events import message_events
+from velum.internal import data_binding
 from velum.traits import entity_factory_trait
 from velum.traits import event_factory_trait
 from velum.traits import gateway_trait
@@ -18,7 +17,7 @@ class EventFactory(event_factory_trait.EventFactory):
     def deserialize_message_create_event(
         self,
         gateway_connection: gateway_trait.GatewayHandler,
-        payload: typing.Dict[str, typing.Any],
+        payload: data_binding.JSONObject,
     ) -> message_events.MessageCreateEvent:
         return message_events.MessageCreateEvent(
             message=self._entity_factory.deserialize_message(payload)

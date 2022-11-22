@@ -11,6 +11,7 @@ import typing_extensions
 
 from velum.events import base_events
 from velum.internal import async_utils
+from velum.internal import data_binding
 from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
 
@@ -30,13 +31,13 @@ if typing.TYPE_CHECKING:
         typing.Set[_WaiterPairT[base_events.EventT]],
     ]
     ConsumerCallback = typing.Callable[
-        [gateway_trait.GatewayHandler, typing.Dict[str, typing.Any]],
+        [gateway_trait.GatewayHandler, data_binding.JSONObject],
         typing.Coroutine[typing.Any, typing.Any, None],
     ]
 
 _EventManagerT = typing.TypeVar("_EventManagerT", bound=event_manager_trait.EventManager)
 UnboundConsumerCallback = typing.Callable[
-    [_EventManagerT, gateway_trait.GatewayHandler, typing.Dict[str, typing.Any]],
+    [_EventManagerT, gateway_trait.GatewayHandler, data_binding.JSONObject],
     typing.Coroutine[typing.Any, typing.Any, None],
 ]
 
@@ -160,7 +161,7 @@ class _BoundConsumer(typing.Generic[_EventManagerT]):
     async def __call__(
         self,
         gateway_connection: gateway_trait.GatewayHandler,
-        payload: typing.Dict[str, typing.Any],
+        payload: data_binding.JSONObject,
     ) -> None:
         await self.callback(self.event_manager, gateway_connection, payload)
 
@@ -221,7 +222,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         self,
         consumer: _BoundConsumer[typing_extensions.Self],
         gateway_connection: gateway_trait.GatewayHandler,
-        payload: typing.Dict[str, typing.Any],
+        payload: data_binding.JSONObject,
     ):
         if not consumer.is_enabled:
             _LOGGER.debug(
@@ -268,7 +269,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         self,
         event_name: str,
         gateway_connection: gateway_trait.GatewayHandler,
-        payload: typing.Dict[str, typing.Any],
+        payload: data_binding.JSONObject,
     ) -> None:
         consumer = self._consumers[event_name.lower()]
         asyncio.create_task(

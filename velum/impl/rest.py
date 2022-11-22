@@ -101,7 +101,11 @@ class RESTClient(rest_trait.RESTClient):
         ...
 
     @typing.overload
-    async def send_message(self, author: str, message: str,) -> None:
+    async def send_message(
+        self,
+        author: str,
+        message: str,
+    ) -> None:
         ...
 
     async def send_message(

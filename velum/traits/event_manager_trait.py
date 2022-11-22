@@ -2,6 +2,7 @@ import asyncio
 import typing
 
 from velum.events import base_events
+from velum.internal import data_binding
 from velum.traits import gateway_trait
 
 EventPredicateT = typing.Callable[[base_events.EventT], bool]
@@ -15,7 +16,7 @@ class EventManager(typing.Protocol):
         self,
         event_name: str,
         gateway_connection: gateway_trait.GatewayHandler,
-        payload: typing.Dict[str, typing.Any],
+        payload: data_binding.JSONObject,
     ) -> None:
         ...
 
