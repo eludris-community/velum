@@ -10,13 +10,13 @@ python = "^3.10"
 aiohttp = "^3.8.3"
 typing-extensions = "^4.4.0"
 
-
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.17.1"
 pyright = "^1.1.280"
 isort = "^5.10.1"
 black = "^22.10.0"
 flake8 = "^5.0.4"
+slotscheck = "^0.16.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -36,3 +36,8 @@ typeCheckingMode = "strict"
 [tool.black]
 line-length = 100
 target-version = ["py310"]
+
+[tool.slotscheck]
+strict-imports = true
+require-superclass = true
+require-subclass = true
