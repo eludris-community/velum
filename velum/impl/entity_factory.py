@@ -1,9 +1,10 @@
 import typing
 
 from velum import models
+from velum.traits import entity_factory_trait
 
 
-class EntityFactory:
+class EntityFactory(entity_factory_trait.EntityFactory):
 
     __slots__ = ()
 

@@ -1,7 +1,9 @@
 import typing_extensions
 
+from velum.traits import rate_limit_trait
 
-class ExponentialBackoff:
+
+class ExponentialBackoff(rate_limit_trait.RateLimiter):
 
     __slots__ = ("base", "maximum", "increment", "_initial_increment")
 

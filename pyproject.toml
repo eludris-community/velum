@@ -44,5 +44,6 @@ require-subclass = true
 exclude-classes = """
 (
     ^velum\\.internal\\.typing_patches:WSMessage$
+    |^velum\\.internal\\.class_utils:classmethod$
 )
 """

@@ -2,7 +2,6 @@ import asyncio
 
 import velum
 
-
 SELF_AUTHOR = "Velum"  # Author name to use for messages sent to eludris.
 VELUM_URL = "https://github.com/Chromosomologist/velum"
 

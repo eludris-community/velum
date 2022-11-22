@@ -4,16 +4,17 @@ import typing
 import aiohttp
 import typing_extensions
 
-from velum import entity_factory
 from velum import errors
 from velum import models
 from velum import routes
+from velum.traits import entity_factory_trait
+from velum.traits import rest_trait
 
 _REST_URL: typing.Final[str] = "https://eludris.tooty.xyz/"
 _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 
-class RESTClient:
+class RESTClient(rest_trait.RESTClient):
 
     __slots__ = (
         "_entity_factory",
@@ -24,11 +25,22 @@ class RESTClient:
     _session: typing.Optional[aiohttp.ClientSession]
 
     def __init__(
-        self, *, rest_url: typing.Optional[str] = None, entity_factory: entity_factory.EntityFactory
+        self,
+        *,
+        rest_url: typing.Optional[str] = None,
+        entity_factory: entity_factory_trait.EntityFactory,
     ):
         self._entity_factory = entity_factory
         self._rest_url = rest_url or _REST_URL
         self._session = None
+
+    @property
+    def is_alive(self) -> bool:
+        return self._session is not None
+
+    @property
+    def entity_factory(self) -> entity_factory_trait.EntityFactory:
+        return self._entity_factory
 
     def _assert_and_return_session(self) -> aiohttp.ClientSession:
         if self._session is None:

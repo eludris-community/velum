@@ -5,13 +5,17 @@ import logging
 import time
 import typing
 
-from velum import entity_factory
-from velum import event_factory
-from velum import event_manager
-from velum import event_manager_base
-from velum import gateway
-from velum import rest
 from velum.events import base_events
+from velum.impl import entity_factory
+from velum.impl import event_factory
+from velum.impl import event_manager
+from velum.impl import gateway
+from velum.impl import rest
+from velum.traits import entity_factory_trait
+from velum.traits import event_factory_trait
+from velum.traits import event_manager_trait
+from velum.traits import gateway_trait
+from velum.traits import rest_trait
 
 T = typing.TypeVar("T")
 _MaybeType = typing.Optional[typing.Type[T]]
@@ -31,33 +35,53 @@ class GatewayBot:
         "_closing_event",
     )
 
+    _entity_factory: entity_factory_trait.EntityFactory
+    _event_factory: event_factory_trait.EventFactory
+    _event_manager: event_manager_trait.EventManager
+    _rest: rest_trait.RESTClient
+    _gateway: gateway_trait.GatewayHandler
+    _closing_event: typing.Optional[asyncio.Event]
+
     def __init__(
         self,
         gateway_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
         # TODO: replace with prototypes
-        entity_factory_impl: _MaybeType[entity_factory.EntityFactory] = None,
-        event_factory_impl: _MaybeType[event_factory.EventFactory] = None,
-        event_manager_impl: _MaybeType[event_manager.EventManager] = None,
-        gateway_impl: _MaybeType[gateway.GatewayHandler] = None,
-        rest_client_impl: _MaybeType[rest.RESTClient] = None,
+        entity_factory_impl: typing.Optional[entity_factory_trait.EntityFactory] = None,
+        event_factory_impl: typing.Optional[event_factory_trait.EventFactory] = None,
+        event_manager_impl: typing.Optional[event_manager_trait.EventManager] = None,
+        gateway_impl: typing.Optional[gateway_trait.GatewayHandler] = None,
+        rest_client_impl: typing.Optional[rest_trait.RESTClient] = None,
     ):
-        # Apply implementation defaults...
-        entity_factory_impl = entity_factory_impl or entity_factory.EntityFactory
-        event_factory_impl = event_factory_impl or event_factory.EventFactory
-        event_manager_impl = event_manager_impl or event_manager.EventManager
-        gateway_impl = gateway_impl or gateway.GatewayHandler
-        rest_client_impl = rest_client_impl or rest.RESTClient
-
-        self._entity_factory = entity_factory_impl()
-        self._event_factory = event_factory_impl(self._entity_factory)
-        self._event_manager = event_manager_impl(self._event_factory)
+        self._entity_factory = (
+            entity_factory_impl
+            if entity_factory_impl is not None
+            else entity_factory.EntityFactory()
+        )
+        self._event_factory = (
+            event_factory_impl
+            if event_factory_impl is not None
+            else event_factory.EventFactory(self._entity_factory)
+        )
+        self._event_manager = (
+            event_manager_impl
+            if event_manager_impl is not None
+            else event_manager.EventManager(self._event_factory)
+        )
 
         # RESTful API.
-        self._rest = rest_client_impl(rest_url=rest_url, entity_factory=self._entity_factory)
+        self._rest = (
+            rest_client_impl
+            if rest_client_impl is not None
+            else rest.RESTClient(rest_url=rest_url, entity_factory=self._entity_factory)
+        )
 
         # Gateway connection.
-        self._gateway = gateway_impl(gateway_url=gateway_url, event_manager=self._event_manager)
+        self._gateway = (
+            gateway_impl
+            if gateway_impl is not None
+            else gateway.GatewayHandler(gateway_url=gateway_url, event_manager=self._event_manager)
+        )
 
         # Setup state.
         self._closing_event: typing.Optional[asyncio.Event] = None
@@ -112,23 +136,23 @@ class GatewayBot:
         _LOGGER.info("Bot closed successfully.")
 
     @property
-    def entity_factory(self) -> entity_factory.EntityFactory:
+    def entity_factory(self) -> entity_factory_trait.EntityFactory:
         return self._entity_factory
 
     @property
-    def event_factory(self) -> event_factory.EventFactory:
+    def event_factory(self) -> event_factory_trait.EventFactory:
         return self._event_factory
 
     @property
-    def event_manager(self) -> event_manager.EventManager:
+    def event_manager(self) -> event_manager_trait.EventManager:
         return self._event_manager
 
     @property
-    def rest(self) -> rest.RESTClient:
+    def rest(self) -> rest_trait.RESTClient:
         return self._rest
 
     @property
-    def gateway(self) -> gateway.GatewayHandler:
+    def gateway(self) -> gateway_trait.GatewayHandler:
         return self._gateway
 
     @property
@@ -174,6 +198,6 @@ class GatewayBot:
         event_type: typing.Type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_manager_base.EventPredicateT[base_events.EventT]] = None,
+        predicate: typing.Optional[event_manager_trait.EventPredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)

@@ -9,11 +9,12 @@ import typing
 import attr
 import typing_extensions
 
-from velum import gateway
 from velum.events import base_events
 from velum.internal import async_utils
+from velum.traits import event_manager_trait
+from velum.traits import gateway_trait
 
-EventPredicateT = typing.Callable[[base_events.EventT], bool]
+# EventPredicateT = typing.Callable[[base_events.EventT], bool]
 
 if typing.TYPE_CHECKING:
     _ListenerMapT = typing.Dict[
@@ -21,7 +22,7 @@ if typing.TYPE_CHECKING:
         typing.List[base_events.EventCallbackT[base_events.EventT]],
     ]
     _WaiterPairT = typing.Tuple[
-        typing.Optional[EventPredicateT[base_events.EventT]],
+        typing.Optional[event_manager_trait.EventPredicateT[base_events.EventT]],
         asyncio.Future[base_events.EventT],
     ]
     _WaiterMapT = typing.Dict[
@@ -29,13 +30,13 @@ if typing.TYPE_CHECKING:
         typing.Set[_WaiterPairT[base_events.EventT]],
     ]
     ConsumerCallback = typing.Callable[
-        [gateway.GatewayHandler, typing.Dict[str, typing.Any]],
+        [gateway_trait.GatewayHandler, typing.Dict[str, typing.Any]],
         typing.Coroutine[typing.Any, typing.Any, None],
     ]
 
-_EventManagerBaseT = typing.TypeVar("_EventManagerBaseT", bound="EventManagerBase")
+_EventManagerT = typing.TypeVar("_EventManagerT", bound=event_manager_trait.EventManager)
 UnboundConsumerCallback = typing.Callable[
-    [_EventManagerBaseT, gateway.GatewayHandler, typing.Dict[str, typing.Any]],
+    [_EventManagerT, gateway_trait.GatewayHandler, typing.Dict[str, typing.Any]],
     typing.Coroutine[typing.Any, typing.Any, None],
 ]
 
@@ -54,8 +55,8 @@ def _is_exception_event(
 
 
 @attr.define(weakref_slot=False)
-class Consumer(typing.Generic[_EventManagerBaseT]):
-    callback: UnboundConsumerCallback[_EventManagerBaseT] = attr.field(hash=True)
+class Consumer(typing.Generic[_EventManagerT]):
+    callback: UnboundConsumerCallback[_EventManagerT] = attr.field(hash=True)
     """The callback function for this consumer."""
 
     events_bitmask: int = attr.field()
@@ -77,19 +78,19 @@ class Consumer(typing.Generic[_EventManagerBaseT]):
 
     @typing.overload
     def __get__(
-        self, instance: _BoundConsumer[_EventManagerBaseT], owner: typing.Type[typing.Any]
-    ) -> Consumer[_EventManagerBaseT]:
+        self, instance: _BoundConsumer[_EventManagerT], owner: typing.Type[typing.Any]
+    ) -> Consumer[_EventManagerT]:
         ...
 
     @typing.overload
     def __get__(
         self, instance: typing.Any, owner: typing.Type[typing.Any]
-    ) -> _BoundConsumer[_EventManagerBaseT]:
+    ) -> _BoundConsumer[_EventManagerT]:
         ...
 
     def __get__(
         self, instance: typing.Optional[typing.Any], owner: typing.Type[typing.Any]
-    ) -> _BoundConsumer[_EventManagerBaseT] | Consumer[_EventManagerBaseT]:
+    ) -> _BoundConsumer[_EventManagerT] | Consumer[_EventManagerT]:
         if instance is None or isinstance(instance, _BoundConsumer):
             return self
 
@@ -98,7 +99,7 @@ class Consumer(typing.Generic[_EventManagerBaseT]):
 
 def is_consumer_for(
     *event_types: typing.Type[base_events.Event],
-) -> typing.Callable[[UnboundConsumerCallback[_EventManagerBaseT]], Consumer[_EventManagerBaseT]]:
+) -> typing.Callable[[UnboundConsumerCallback[_EventManagerT]], Consumer[_EventManagerT]]:
     # Get all event subtypes dispatched by the provided events and eliminate
     # duplicates...
     event_types = tuple(
@@ -114,22 +115,22 @@ def is_consumer_for(
         bitmask |= event_type.bitmask
 
     def wrapper(
-        callback: UnboundConsumerCallback[_EventManagerBaseT],
-    ) -> Consumer[_EventManagerBaseT]:
+        callback: UnboundConsumerCallback[_EventManagerT],
+    ) -> Consumer[_EventManagerT]:
         return Consumer(callback, bitmask)
 
     return wrapper
 
 
 @attr.define(weakref_slot=False)
-class _BoundConsumer(typing.Generic[_EventManagerBaseT]):
+class _BoundConsumer(typing.Generic[_EventManagerT]):
 
-    event_manager: EventManagerBase = attr.field()
+    event_manager: event_manager_trait.EventManager = attr.field()
 
-    consumer: Consumer[_EventManagerBaseT] = attr.field()
+    consumer: Consumer[_EventManagerT] = attr.field()
 
     @property
-    def callback(self) -> UnboundConsumerCallback[_EventManagerBaseT]:
+    def callback(self) -> UnboundConsumerCallback[_EventManagerT]:
         return self.consumer.callback
 
     @property
@@ -157,12 +158,14 @@ class _BoundConsumer(typing.Generic[_EventManagerBaseT]):
         return self.consumer.is_enabled
 
     async def __call__(
-        self, gateway_connection: gateway.GatewayHandler, payload: typing.Dict[str, typing.Any]
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: typing.Dict[str, typing.Any],
     ) -> None:
         await self.callback(self.event_manager, gateway_connection, payload)
 
 
-class EventManagerBase:
+class EventManagerBase(event_manager_trait.EventManager):
 
     __slots__ = ("_consumers", "_listeners", "_waiters")
 
@@ -217,7 +220,7 @@ class EventManagerBase:
     async def _handle_consumption(
         self,
         consumer: _BoundConsumer[typing_extensions.Self],
-        gateway_connection: gateway.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,
         payload: typing.Dict[str, typing.Any],
     ):
         if not consumer.is_enabled:
@@ -264,7 +267,7 @@ class EventManagerBase:
     def consume_raw_event(
         self,
         event_name: str,
-        gateway_connection: gateway.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,
         payload: typing.Dict[str, typing.Any],
     ) -> None:
         consumer = self._consumers[event_name.lower()]
@@ -350,7 +353,7 @@ class EventManagerBase:
             del self._listeners[event_type]
             self._increment_listener_group_count(event_type, -1)
 
-    def get_listeners(
+    def get_listeners(  # pyright: ignore[reportIncompatibleMethodOverride]
         self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
     ) -> typing.Collection[base_events.EventCallbackT[base_events.EventT]]:
         if polymorphic:
@@ -410,13 +413,13 @@ class EventManagerBase:
 
         return wrapper
 
-    async def wait_for(
+    async def wait_for(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         event_type: typing.Type[base_events.EventT],
         /,
         *,
         timeout: typing.Optional[float | int] = None,
-        predicate: typing.Optional[EventPredicateT[base_events.EventT]] = None,
+        predicate: typing.Optional[event_manager_trait.EventPredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
         waiter_set: typing.MutableSet[_WaiterPairT[base_events.Event]]

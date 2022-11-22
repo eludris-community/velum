@@ -10,12 +10,12 @@ import typing
 import aiohttp
 
 from velum import errors
-from velum import rate_limits
+from velum.impl import rate_limits
 from velum.internal import async_utils
 from velum.internal import typing_patches
-
-if typing.TYPE_CHECKING:
-    from velum import event_manager_base
+from velum.traits import event_manager_trait
+from velum.traits import gateway_trait
+from velum.traits import rate_limit_trait
 
 _BACKOFF_WINDOW: typing.Final[float] = 15.0
 _GATEWAY_URL: typing.Final[str] = "wss://eludris.tooty.xyz/ws/"
@@ -156,7 +156,7 @@ class GatewayWebsocket:
         ) from self._ws.exception()
 
 
-class GatewayHandler:
+class GatewayHandler(gateway_trait.GatewayHandler):
 
     __slots__ = (
         "_connection_event",
@@ -172,7 +172,7 @@ class GatewayHandler:
     )
 
     _connection_event: typing.Optional[asyncio.Event]
-    _event_manager: event_manager_base.EventManagerBase
+    _event_manager: event_manager_trait.EventManager
     _gateway_ws: typing.Optional[GatewayWebsocket]
     _keep_alive_task: typing.Optional[asyncio.Task[None]]
     _last_heartbeat: float
@@ -184,7 +184,7 @@ class GatewayHandler:
         self,
         *,
         gateway_url: typing.Optional[str] = None,
-        event_manager: event_manager_base.EventManagerBase,
+        event_manager: event_manager_trait.EventManager,
     ):
         self._event_manager = event_manager
 
@@ -197,6 +197,10 @@ class GatewayHandler:
         self._last_heartbeat_ack = float("nan")
         self._logger = logging.getLogger("velum.gateway")
         self._started_at = float("-inf")
+
+    @property
+    def is_alive(self) -> bool:
+        return self._keep_alive_task is not None
 
     async def start(self) -> None:
         if self._connection_event:
@@ -254,7 +258,7 @@ class GatewayHandler:
             self._event_manager.consume_raw_event(event_name, self, payload)
 
     # TODO: make backoff protocol, replace typehint with proto
-    async def _keep_alive(self, backoff: rate_limits.ExponentialBackoff) -> None:
+    async def _keep_alive(self, backoff: rate_limit_trait.RateLimiter) -> None:
         assert self._connection_event is not None
 
         lifetime_tasks: typing.Tuple[asyncio.Task[typing.Any], ...] = ()

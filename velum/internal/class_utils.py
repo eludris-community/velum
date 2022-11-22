@@ -13,6 +13,9 @@ ClsT = typing.TypeVar("ClsT")
 
 
 class classproperty(typing.Generic[ClsT, T]):
+
+    __slots__: typing.Sequence[str] = ("callback",)
+
     def __init__(self, callback: typing.Callable[[typing.Type[ClsT]], T]):
         self.callback = typing.cast(classmethod[T], callback)
 
