@@ -49,7 +49,6 @@ class GatewayBot:
         self,
         gateway_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
-        # TODO: replace with prototypes
         entity_factory_impl: typing.Optional[entity_factory_trait.EntityFactory] = None,
         event_factory_impl: typing.Optional[event_factory_trait.EventFactory] = None,
         event_manager_impl: typing.Optional[event_manager_trait.EventManager] = None,

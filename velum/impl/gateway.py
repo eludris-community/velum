@@ -70,7 +70,9 @@ class GatewayWebsocket:
         exit_stack = contextlib.AsyncExitStack()
 
         try:
-            session = await exit_stack.enter_async_context(aiohttp.ClientSession())
+            session = await exit_stack.enter_async_context(
+                aiohttp.ClientSession(json_serialize=data_binding.dump_json)
+            )
             ws = await exit_stack.enter_async_context(
                 session.ws_connect(  # pyright: ignore[reportUnknownMemberType]
                     url,
@@ -270,7 +272,6 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
             self._event_manager.consume_raw_event(event_name, self, payload)
 
-    # TODO: make backoff protocol, replace typehint with proto
     async def _keep_alive(self, backoff: rate_limit_trait.RateLimiter) -> None:
         assert self._connection_event is not None
 

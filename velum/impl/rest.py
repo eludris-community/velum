@@ -7,6 +7,7 @@ import typing_extensions
 from velum import errors
 from velum import models
 from velum import routes
+from velum.internal import data_binding
 from velum.traits import entity_factory_trait
 from velum.traits import rest_trait
 
@@ -55,7 +56,7 @@ class RESTClient(rest_trait.RESTClient):
         if self._session is not None:
             raise RuntimeError("Cannot start an already running RESTClient.")
 
-        self._session = aiohttp.ClientSession()
+        self._session = aiohttp.ClientSession(json_serialize=data_binding.dump_json)
 
     async def close(self) -> None:
         await self._assert_and_return_session().close()
@@ -91,8 +92,7 @@ class RESTClient(rest_trait.RESTClient):
             content_type = response.content_type
 
             if content_type == _APPLICATION_JSON:
-                # TODO: replace with centralised customisable json loader.
-                return await response.json()
+                return data_binding.load_json(await response.read())
 
             real_url = str(response.real_url)
             raise errors.HTTPError(f"Expected JSON response. ({content_type=}, {real_url=})")
@@ -136,4 +136,5 @@ class RESTClient(rest_trait.RESTClient):
 
     async def get_instance_info(self) -> models.InstanceInfo:
         response = await self._request(routes.GET_INFO.compile())
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_instance_info(response)
