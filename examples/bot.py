@@ -30,10 +30,10 @@ async def on_message(event: velum.MessageCreateEvent):
 
     match event.content:
         case "!pog":
-            await bot.rest.send_message("Pog!", SELF_AUTHOR)
+            await bot.rest.send_message(SELF_AUTHOR, "Pog!")
 
         case "!velum":
-            await bot.rest.send_message(VELUM_URL, SELF_AUTHOR)
+            await bot.rest.send_message(SELF_AUTHOR, VELUM_URL)
 
         case _:
             return
