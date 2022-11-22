@@ -12,10 +12,19 @@ import aiohttp
 from velum import errors
 from velum.impl import rate_limits
 from velum.internal import async_utils
-from velum.internal import typing_patches
 from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
 from velum.traits import rate_limit_trait
+
+if typing.TYPE_CHECKING:
+    class _WSMessage(typing.Protocol):
+        type: aiohttp.WSMsgType
+        data: typing.Optional[str | bytes]
+        extra: typing.Optional[str]
+
+        def json(self, loads: typing.Callable[[typing.Any], typing.Any] = ...) -> typing.Any:
+            ...
+
 
 _BACKOFF_WINDOW: typing.Final[float] = 15.0
 _GATEWAY_URL: typing.Final[str] = "wss://eludris.tooty.xyz/ws/"
@@ -124,7 +133,7 @@ class GatewayWebsocket:
         return json.loads(payload)  # TODO: provide entrypoint to change json loads/dumps funcs
 
     async def _receive_and_validate_text(self) -> str:
-        message = typing.cast(typing_patches.WSMessage, await self._ws.receive())
+        message = typing.cast("_WSMessage", await self._ws.receive())
 
         if message.type == aiohttp.WSMsgType.TEXT:
             assert isinstance(message.data, str)
@@ -134,7 +143,7 @@ class GatewayWebsocket:
 
     # TODO: implement zlib whenever eludris does
 
-    def _raise_for_unhandled_message(self, message: typing_patches.WSMessage) -> typing.NoReturn:
+    def _raise_for_unhandled_message(self, message: "_WSMessage") -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
             raise errors.GatewayError("Unexpected message type: received TEXT, expected BINARY.")
 
