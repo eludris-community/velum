@@ -2,6 +2,14 @@ import typing
 
 import attr
 
+__all__: typing.Sequence[str] = (
+    "VelumError",
+    "GatewayError",
+    "GatewayConnectionError",
+    "GatewayConnectionClosedError",
+    "HTTPError",
+)
+
 
 @attr.define(auto_exc=True, repr=False, init=False, slots=False)
 class VelumError(RuntimeError):

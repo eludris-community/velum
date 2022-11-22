@@ -16,7 +16,11 @@ from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
 from velum.traits import rate_limit_trait
 
+__all__: typing.Sequence[str] = ("GatewayHandler",)
+
+
 if typing.TYPE_CHECKING:
+
     class _WSMessage(typing.Protocol):
         type: aiohttp.WSMsgType
         data: typing.Optional[str | bytes]

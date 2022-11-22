@@ -16,7 +16,13 @@ from velum.internal import data_binding
 from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
 
-# EventPredicateT = typing.Callable[[base_events.EventT], bool]
+__all__: typing.Sequence[str] = (
+    "UnboundConsumerCallback",
+    "Consumer",
+    "is_consumer_for",
+    "EventManagerBase",
+)
+
 
 if typing.TYPE_CHECKING:
     _ListenerMapT = typing.Dict[

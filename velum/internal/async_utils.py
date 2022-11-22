@@ -1,12 +1,19 @@
 import asyncio
 import typing
 
-T = typing.TypeVar("T")
+__all__: typing.Sequence[str] = (
+    "create_completed_future",
+    "cancel_futures",
+    "first_completed",
+)
+
+
+_T = typing.TypeVar("_T")
 
 
 def create_completed_future(
-    result: typing.Optional[T] = None, /
-) -> asyncio.Future[typing.Optional[T]]:
+    result: typing.Optional[_T] = None, /
+) -> asyncio.Future[typing.Optional[_T]]:
     future = asyncio.get_running_loop().create_future()
     future.set_result(result)
     return future

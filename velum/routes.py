@@ -6,6 +6,15 @@ import typing
 
 import attr
 
+__all__: typing.Sequence[str] = (
+    "Route",
+    "CompiledRoute",
+    "GET",
+    "POST",
+    "GET_INFO",
+    "POST_MESSAGE",
+)
+
 
 @attr.define(hash=True, weakref_slot=False)
 class Route:

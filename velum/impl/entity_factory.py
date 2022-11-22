@@ -4,6 +4,8 @@ from velum import models
 from velum.internal import data_binding
 from velum.traits import entity_factory_trait
 
+__all__: typing.Sequence[str] = ("EntityFactory",)
+
 
 class EntityFactory(entity_factory_trait.EntityFactory):
 

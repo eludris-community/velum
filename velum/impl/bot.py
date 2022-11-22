@@ -17,8 +17,11 @@ from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
 from velum.traits import rest_trait
 
-T = typing.TypeVar("T")
-_MaybeType = typing.Optional[typing.Type[T]]
+__all__: typing.Sequence[str] = ("GatewayBot",)
+
+
+_T = typing.TypeVar("_T")
+_MaybeType = typing.Optional[typing.Type[_T]]
 
 
 _LOGGER = logging.getLogger("velum.bot")
