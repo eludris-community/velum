@@ -161,6 +161,7 @@ class GatewayHandler:
     __slots__ = (
         "_connection_event",
         "_event_manager",
+        "_gateway_url",
         "_gateway_ws",
         "_is_closing",
         "_keep_alive_task",
@@ -179,10 +180,16 @@ class GatewayHandler:
     _logger: logging.Logger
     _started_at: float
 
-    def __init__(self, event_manager: event_manager_base.EventManagerBase):
+    def __init__(
+        self,
+        *,
+        gateway_url: typing.Optional[str] = None,
+        event_manager: event_manager_base.EventManagerBase,
+    ):
         self._event_manager = event_manager
 
         self._connection_event = None
+        self._gateway_url = gateway_url or _GATEWAY_URL
         self._gateway_ws = None
         self._keep_alive_task = None
         self._is_closing = False
@@ -306,7 +313,7 @@ class GatewayHandler:
 
         assert self._connection_event is not None
 
-        self._gateway_ws = await GatewayWebsocket.connect(logger=self._logger, url=_GATEWAY_URL)
+        self._gateway_ws = await GatewayWebsocket.connect(logger=self._logger, url=self._gateway_url)
 
         heartbeat_task = asyncio.create_task(self._heartbeat(), name="heartbeat")
         poll_events_task = asyncio.create_task(self._poll_events(), name="poll events")

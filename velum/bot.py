@@ -33,6 +33,7 @@ class GatewayBot:
 
     def __init__(
         self,
+        gateway_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
         # TODO: replace with prototypes
         entity_factory_impl: _MaybeType[entity_factory.EntityFactory] = None,
@@ -56,7 +57,7 @@ class GatewayBot:
         self._rest = rest_client_impl(rest_url=rest_url, entity_factory=self._entity_factory)
 
         # Gateway connection.
-        self._gateway = gateway_impl(event_manager=self._event_manager)
+        self._gateway = gateway_impl(gateway_url=gateway_url, event_manager=self._event_manager)
 
         # Setup state.
         self._closing_event: typing.Optional[asyncio.Event] = None
