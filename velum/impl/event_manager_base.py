@@ -11,6 +11,7 @@ import typing_extensions
 
 from velum.events import base_events
 from velum.internal import async_utils
+from velum.internal import class_utils
 from velum.internal import data_binding
 from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
@@ -397,9 +398,11 @@ class EventManagerBase(event_manager_trait.EventManager):
 
             else:
                 if typing.get_origin(annotation) in _UNIONS:
-                    resolved_types = set(typing.get_args(annotation))
+                    resolved_types = set(
+                        class_utils.strip_generic(ann) for ann in typing.get_args(annotation)
+                    )
                 else:
-                    resolved_types = {annotation}
+                    resolved_types = {class_utils.strip_generic(annotation)}
 
                 if event_types and resolved_types != set(event_types):
                     raise TypeError(
