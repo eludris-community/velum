@@ -14,18 +14,33 @@ _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 
 class RESTClient:
+
+    _session: typing.Optional[aiohttp.ClientSession]
+
     def __init__(
         self, *, rest_url: typing.Optional[str] = None, entity_factory: entity_factory.EntityFactory
     ):
-        # TODO: make unshittified
         self._entity_factory = entity_factory
         self._rest_url = rest_url or _REST_URL
+        self._session = None
+
+    def _assert_and_return_session(self) -> aiohttp.ClientSession:
+        if self._session is None:
+            raise RuntimeError("Cannot use an inactive RESTClient.")
+
+        return self._session
+
+    def start(self) -> None:
+        if self._session is not None:
+            raise RuntimeError("Cannot start an already running RESTClient.")
+
         self._session = aiohttp.ClientSession()
 
     async def close(self) -> None:
-        await self._session.close()
+        await self._assert_and_return_session().close()
 
     async def __aenter__(self) -> typing_extensions.Self:
+        self.start()
         return self
 
     async def __aexit__(
@@ -44,7 +59,7 @@ class RESTClient:
         json: typing.Optional[typing.Any] = None,
     ):
         url = route.create_url(self._rest_url)
-        response = await self._session.request(
+        response = await self._assert_and_return_session().request(
             route.method,
             url,
             params=query,
