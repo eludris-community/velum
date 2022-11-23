@@ -11,9 +11,11 @@ import velum
 
 # First and foremost, we will use orjson instead of the default json library.
 # This can easily achieved with a helper function provided by Velum.
+# You don't have to manually call this as the library will try to use orjson 
+# first, if it's installed locally.
 # Note that this will raise an `ImportError` if orjson is not installed.
 
-velum.set_json_impl(impl=velum.JSONImpl.ORJSON)
+# velum.set_json_impl(impl=velum.JSONImpl.ORJSON)
 
 
 # Next, and probably the most impactful, is uvloop. This only works on

@@ -141,5 +141,8 @@ def set_json_impl(
 
 
 # Set the stdlib `json` module as the default implementation
+try:
+    set_json_impl(impl=JSONImpl.ORJSON)
 
-set_json_impl(impl=JSONImpl.JSON)
+except ImportError:
+    set_json_impl(impl=JSONImpl.JSON)
