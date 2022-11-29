@@ -41,6 +41,7 @@ _D: typing.Final[str] = sys.intern("d")
 
 # Special opcodes.
 _PONG: typing.Final[str] = sys.intern("PONG")
+_PING: typing.Final[str] = sys.intern("PING")
 
 
 class GatewayWebsocket:
@@ -126,9 +127,6 @@ class GatewayWebsocket:
         finally:
             await self._exit_stack.aclose()
             await asyncio.sleep(0.25)
-
-    async def send_ping(self) -> None:
-        await self._ws.ping()
 
     async def send_json(self, data: typing.Mapping[str, typing.Any]) -> None:
         payload = data_binding.dump_json(data)
@@ -358,6 +356,14 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         return (heartbeat_task, poll_events_task)
 
+    async def _send_heartbeat(self) -> None:
+        self._logger.debug("Sending heartbeat.")
+
+        assert self._gateway_ws
+        await self._gateway_ws.send_json({_OP: _PING})
+
+        self._last_heartbeat = time.monotonic()
+
     async def _heartbeat(self) -> None:
         assert self._gateway_ws is not None
 
@@ -374,8 +380,5 @@ class GatewayHandler(gateway_trait.GatewayHandler):
                 )
                 return
 
-            self._logger.debug("Sending heartbeat.")
-            await self._gateway_ws.send_ping()
-            self._last_heartbeat = time.monotonic()
-
+            await self._send_heartbeat()
             await asyncio.sleep(_HEARTBEAT_INTERVAL)
