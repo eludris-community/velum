@@ -1,6 +1,6 @@
 # Velum
 
-Velum is an opinionated wrapper for the [Eludris](https://eludris.pages.dev/#/) API written in Python.
+Velum is an opinionated wrapper for the [Eludris](https://eludris.pages.dev/#/) API written in Python, very much inspired by [Hikari](https://github.com/hikari-py/hikari).
 It can handle connection, keep-alive, gateway events and interacting with Eludris' REST-api. If you are looking for a command handler to go with Velum, please take a look at [Velum-Sail](https://github.com/Chromosomologist/velum-sail).
 
 Please keep in mind that this library is still in its infancy, and some much needed features such as documentation are coming in the near<sup>TM</sup> future.
