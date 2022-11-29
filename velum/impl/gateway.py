@@ -9,6 +9,7 @@ import typing
 import aiohttp
 
 from velum import errors
+from velum.events import connection_events
 from velum.impl import rate_limits
 from velum.internal import async_utils
 from velum.internal import data_binding
@@ -323,7 +324,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
                     await ws.send_close(code=1000, message=b"see ya")
 
-                # TODO: dispatch "disconnected" event?
+                self._event_manager.dispatch(connection_events.DisconnectEvent())
 
     async def _connect(self) -> typing.Tuple[asyncio.Task[typing.Any], ...]:
         if self._gateway_ws is not None:
@@ -340,6 +341,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         # Indicate connection logic is done.
         self._connection_event.set()
+        self._event_manager.dispatch(connection_events.ConnectionEvent())
 
         return (heartbeat_task, poll_events_task)
 
