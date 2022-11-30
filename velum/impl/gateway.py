@@ -279,7 +279,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
                 now = time.monotonic()
                 self._last_heartbeat_ack = now
                 self._heartbeat_latency = now - self._last_heartbeat
-                self._logger.debug("Received PONG in %s [ms]." % self._heartbeat_latency * 1000)
+                self._logger.debug("Received PONG in %.2f [ms].", self._heartbeat_latency * 1000)
 
             else:
                 data = payload[_D]
@@ -295,7 +295,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
             if time.monotonic() - self._started_at < _BACKOFF_WINDOW:
                 backoff_time = next(backoff)
-                self._logger.info("Backing off of reconnecting for %s [s].", backoff_time)
+                self._logger.info("Backing off of reconnecting for %.2f [s].", backoff_time)
                 await asyncio.sleep(backoff_time)
 
             try:
@@ -374,7 +374,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
             if self._last_heartbeat_ack <= self._last_heartbeat:
                 self._logger.error(
-                    "Heartbeat was not acknowledged for approximately %s [s], "
+                    "Heartbeat was not acknowledged for approximately %.2f [s], "
                     "we will now disconnect and attempt to reconnect.",
                     time.monotonic() - self._last_heartbeat_ack,
                 )
