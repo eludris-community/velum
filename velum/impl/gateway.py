@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import sys
 import time
 import typing
 
@@ -33,7 +34,15 @@ if typing.TYPE_CHECKING:
 
 _BACKOFF_WINDOW: typing.Final[float] = 15.0
 _GATEWAY_URL: typing.Final[str] = "wss://eludris.tooty.xyz/ws/"
-_HEARTBEAT_INTERVAL: typing.Final[float] = 20.0
+_HEARTBEAT_INTERVAL: typing.Final[float] = 45.0
+
+# Payload attributes.
+_OP: typing.Final[str] = sys.intern("op")
+_D: typing.Final[str] = sys.intern("d")
+
+# Special opcodes.
+_PONG: typing.Final[str] = sys.intern("PONG")
+_PING: typing.Final[str] = sys.intern("PING")
 
 
 class GatewayWebsocket:
@@ -120,9 +129,6 @@ class GatewayWebsocket:
             await self._exit_stack.aclose()
             await asyncio.sleep(0.25)
 
-    async def send_ping(self) -> None:
-        await self._ws.ping()
-
     async def send_json(self, data: typing.Mapping[str, typing.Any]) -> None:
         payload = data_binding.dump_json(data)
 
@@ -179,6 +185,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         "_event_manager",
         "_gateway_url",
         "_gateway_ws",
+        "_heartbeat_latency",
         "_is_closing",
         "_keep_alive_task",
         "_last_heartbeat",
@@ -190,6 +197,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
     _connection_event: typing.Optional[asyncio.Event]
     _event_manager: event_manager_trait.EventManager
     _gateway_ws: typing.Optional[GatewayWebsocket]
+    _heartbeat_latency: float
     _keep_alive_task: typing.Optional[asyncio.Task[None]]
     _last_heartbeat: float
     _last_heartbeat_ack: float
@@ -207,6 +215,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         self._connection_event = None
         self._gateway_url = gateway_url or _GATEWAY_URL
         self._gateway_ws = None
+        self._heartbeat_latency = float("nan")
         self._keep_alive_task = None
         self._is_closing = False
         self._last_heartbeat = float("nan")
@@ -265,13 +274,17 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         while True:
             payload = await self._gateway_ws.receive_json()
+            op = payload[_OP]
 
-            # NOTE: Currently the only event dispatched by eludris.
-            #       Waiting on a proper payload implementation so we can get tje
-            #       event name from the actual payload.
-            event_name = "MESSAGE_CREATE"
+            if op == _PONG:
+                now = time.monotonic()
+                self._last_heartbeat_ack = now
+                self._heartbeat_latency = now - self._last_heartbeat
+                self._logger.debug("Received PONG in %.2f [ms].", self._heartbeat_latency * 1000)
 
-            self._event_manager.consume_raw_event(event_name, self, payload)
+            else:
+                data = payload[_D]
+                self._event_manager.consume_raw_event(op, self, data)
 
     async def _keep_alive(self, backoff: rate_limit_trait.RateLimiter) -> None:
         assert self._connection_event is not None
@@ -283,7 +296,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
             if time.monotonic() - self._started_at < _BACKOFF_WINDOW:
                 backoff_time = next(backoff)
-                self._logger.info("Backing off of reconnecting for %s [s].", backoff_time)
+                self._logger.info("Backing off of reconnecting for %.2f [s].", backoff_time)
                 await asyncio.sleep(backoff_time)
 
             try:
@@ -345,6 +358,14 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         return (heartbeat_task, poll_events_task)
 
+    async def _send_heartbeat(self) -> None:
+        self._logger.debug("Sending heartbeat.")
+
+        assert self._gateway_ws
+        await self._gateway_ws.send_json({_OP: _PING})
+
+        self._last_heartbeat = time.monotonic()
+
     async def _heartbeat(self) -> None:
         assert self._gateway_ws is not None
 
@@ -353,18 +374,13 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         while True:
 
-            # TODO: uncomment when eludris switches to opcode pings
+            if self._last_heartbeat_ack <= self._last_heartbeat:
+                self._logger.error(
+                    "Heartbeat was not acknowledged for approximately %.2f [s], "
+                    "we will now disconnect and attempt to reconnect.",
+                    time.monotonic() - self._last_heartbeat_ack,
+                )
+                return
 
-            # if self._last_heartbeat_ack <= self._last_heartbeat:
-            #     self._logger.error(
-            #         "Heartbeat was not acknowledged for approximately %s [s], "
-            #         "we will now disconnect and attempt to reconnect.",
-            #         time.monotonic() - self._last_heartbeat_ack,
-            #     )
-            #     return
-
-            self._logger.debug("Sending heartbeat.")
-            await self._gateway_ws.send_ping()
-            self._last_heartbeat = time.monotonic()
-
+            await self._send_heartbeat()
             await asyncio.sleep(_HEARTBEAT_INTERVAL)
