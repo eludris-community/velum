@@ -14,7 +14,7 @@ from velum.traits import rest_trait
 __all__: typing.Sequence[str] = ("RESTClient",)
 
 
-_REST_URL: typing.Final[str] = "https://eludris.tooty.xyz/"
+_REST_URL: typing.Final[str] = "https://api.eludris.gay/"
 _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 
