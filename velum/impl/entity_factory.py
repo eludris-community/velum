@@ -24,6 +24,8 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         oprish_url = typing.cast(str, payload["oprish_url"])
         pandemonium_url = typing.cast(str, payload["pandemonium_url"])
         effis_url = typing.cast(str, payload["effis_url"])
+        file_size = typing.cast(str, payload["file_size"])
+        attachment_file_size = typing.cast(str, payload["attachment_file_size"])
 
         return models.InstanceInfo(
             instance_name=instance_name,
@@ -32,6 +34,8 @@ class EntityFactory(entity_factory_trait.EntityFactory):
             oprish_url=oprish_url,
             pandemonium_url=pandemonium_url,
             effis_url=effis_url,
+            file_size=int(file_size),
+            attachment_file_size=int(attachment_file_size),
         )
 
     def _deserialize_ratelimit_config(

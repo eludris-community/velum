@@ -46,6 +46,16 @@ class InstanceInfo:
     effis_url: str = attr.field()
     """The url to the connected instance's CDN."""
 
+    file_size: int = attr.field()
+    """The maximum asset file size that can be uploaded to the connected
+    instance's CDN.
+    """
+
+    attachment_file_size: int = attr.field()
+    """The maximum attachment file size that can be uploaded to the connected
+    instance's CDN.
+    """
+
 
 @attr.define(kw_only=True, weakref_slot=False)
 class RatelimitConfig:
