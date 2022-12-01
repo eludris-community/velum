@@ -53,3 +53,4 @@ POST: typing.Final[str] = "POST"
 
 GET_INFO = Route(GET, "/")
 POST_MESSAGE = Route(POST, "/messages")
+GET_RATELIMITS = Route(GET, "/ratelimits")
