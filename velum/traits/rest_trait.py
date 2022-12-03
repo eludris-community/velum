@@ -61,9 +61,9 @@ class RESTClient(typing.Protocol):
 
     async def upload_to_bucket(
         self,
-        attachment: files.ResourceLike,
-        /,
         bucket: str,
+        /,
+        file: files.ResourceLike,
         *,
         spoiler: bool = False,
     ) -> models.FileData:
@@ -76,4 +76,10 @@ class RESTClient(typing.Protocol):
         *,
         spoiler: bool = False,
     ) -> models.FileData:
+        ...
+
+    async def fetch_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+        ...
+
+    async def fetch_attachment(self, id: int) -> files.URL:
         ...

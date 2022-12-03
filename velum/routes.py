@@ -74,4 +74,6 @@ GET_RATELIMITS = Route(GET, OPRISH, "/ratelimits")
 # Effis routes.
 
 POST_ATTACHMENT = Route(POST, EFFIS, "/")
+GET_ATTACHMENT = Route(GET, EFFIS, "/{id}")
 POST_FILE = Route(POST, EFFIS, "/{bucket}")
+GET_FILE = Route(GET, EFFIS, "/{bucket}/{id}")

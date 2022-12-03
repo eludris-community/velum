@@ -81,6 +81,10 @@ class RESTClient(rest_trait.RESTClient):
     ) -> None:
         await self.close()
 
+    def _complete_route(self, route: routes.CompiledRoute) -> str:
+        base_url = self._routes[route.destination]
+        return route.create_url(base_url)
+
     async def _request(
         self,
         route: routes.CompiledRoute,
@@ -89,8 +93,7 @@ class RESTClient(rest_trait.RESTClient):
         json: typing.Optional[typing.Any] = None,
         form_builder: typing.Optional[data_binding.FormBuilder] = None,
     ):
-        base_url = self._routes[route.destination]
-        url = route.create_url(base_url)
+        url = self._complete_route(route)
 
         stack = contextlib.AsyncExitStack()
         async with stack:
@@ -166,9 +169,9 @@ class RESTClient(rest_trait.RESTClient):
 
     async def upload_to_bucket(
         self,
-        file: files.ResourceLike,
-        /,
         bucket: str,
+        /,
+        file: files.ResourceLike,
         *,
         spoiler: bool = False,
     ) -> models.FileData:
@@ -189,4 +192,11 @@ class RESTClient(rest_trait.RESTClient):
         *,
         spoiler: bool = False,
     ) -> models.FileData:
-        return await self.upload_to_bucket(attachment, bucket="attachments", spoiler=spoiler)
+        return await self.upload_to_bucket("attachments", attachment, spoiler=spoiler)
+
+    async def fetch_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+        url = self._complete_route(routes.GET_FILE.compile(bucket=bucket, id=id))
+        return files.URL(url)
+
+    async def fetch_attachment(self, id: int) -> files.URL:
+        return await self.fetch_from_bucket("attachments", id)
