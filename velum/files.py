@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 import abc
-import aiohttp
 import asyncio
-import attr
 import concurrent.futures
 import contextlib
 import inspect
@@ -16,14 +14,16 @@ import os
 import pathlib
 import types
 import typing
-import typing_extensions
 import urllib.parse
 import uuid
 
+import aiohttp
+import attr
+import typing_extensions
+
 from velum.internal import async_utils
 
-
-ReaderT = typing.TypeVar("ReaderT", bound="AsyncReader",)
+ReaderT = typing.TypeVar("ReaderT", bound="AsyncReader")
 ReaderT_co = typing_extensions.TypeVar(
     "ReaderT_co", bound="AsyncReader", covariant=True, default="AsyncReader"
 )
@@ -73,10 +73,7 @@ def unwrap_bytes(data: RawData) -> bytes:
 
 
 def ensure_resource(
-    data: ResourceLike,
-    /,
-    *,
-    filename: typing.Optional[str] = None
+    data: ResourceLike, /, *, filename: typing.Optional[str] = None
 ) -> "Resource[AsyncReader]":
     if isinstance(data, Resource):
         return data
@@ -266,7 +263,7 @@ class File(Resource[ThreadedFileReader]):
         /,
         filename: typing.Optional[str] = None,
         *,
-        spoiler: bool = False
+        spoiler: bool = False,
     ) -> None:
         self.path = ensure_path(path)
         self.is_spoiler = spoiler
@@ -511,8 +508,7 @@ class _NoOpAsyncReader(AsyncReaderContextManager[ReaderT]):
 
 
 class Bytes(Resource[IteratorReader]):
-    """Representation of in-memory data to upload.
-    """
+    """Representation of in-memory data to upload."""
 
     __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "is_spoiler")
 
