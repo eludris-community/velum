@@ -145,3 +145,36 @@ class InstanceRatelimits:
 
     effis: EffisRatelimits = attr.field()
     """The ratelimits that apply to the connected Eludris instance's CDN."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class FileMetadata:
+    type: str = attr.field()
+    """The type of file. Can be any of "text", "image", "video", or "other"."""
+
+    width: typing.Optional[int] = attr.field(default=None)
+    """The width of the file. Only available for files of types "image" or "video"."""
+
+    height: typing.Optional[int] = attr.field(default=None)
+    """The height of the file. Only available for files of types "image" or "video"."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class FileData:
+    id: int
+    """The id of the file."""
+
+    name: str
+    """The name of the file."""
+
+    bucket: str
+    """The bucket to which the file belongs."""
+
+    spoiler: bool
+    """Whether or not the file is tagged as a spoiler."""
+
+    metadata: FileMetadata
+    """Extra information pertaining the file. This is dependent on the filetype.
+
+    See the documentation on ``FileMetadata`` for more accurate information.
+    """

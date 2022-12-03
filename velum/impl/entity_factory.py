@@ -110,3 +110,31 @@ class EntityFactory(entity_factory_trait.EntityFactory):
             pandemonium=pandemonium,
             effis=effis,
         )
+
+    def _deserialize_file_metadata(self, payload: data_binding.JSONObject) -> models.FileMetadata:
+        type_ = typing.cast(str, payload["type"])
+        width = typing.cast(typing.Optional[str], payload.get("width"))
+        height = typing.cast(typing.Optional[str], payload.get("height"))
+
+        return models.FileMetadata(
+            type=type_,
+            width=int(width) if width else None,
+            height=int(height) if height else None,
+        )
+
+    def deserialize_file_data(self, payload: data_binding.JSONObject) -> models.FileData:
+        id = typing.cast(str, payload["id"])
+        name = typing.cast(str, payload["name"])
+        bucket = typing.cast(str, payload["bucket"])
+        spoiler = typing.cast(typing.Optional[str], payload.get("spoiler"))
+        metadata = self._deserialize_file_metadata(
+            typing.cast(data_binding.JSONObject, payload["metadata"])
+        )
+
+        return models.FileData(
+            id=int(id),
+            name=name,
+            bucket=bucket,
+            spoiler=True if spoiler else False,
+            metadata=metadata,
+        )

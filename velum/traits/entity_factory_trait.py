@@ -16,3 +16,6 @@ class EntityFactory(typing.Protocol):
 
     def deserialize_ratelimits(self, payload: data_binding.JSONObject) -> models.InstanceRatelimits:
         ...
+
+    def deserialize_file_data(self, payload: data_binding.JSONObject) -> models.FileData:
+        ...
