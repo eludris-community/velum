@@ -1,3 +1,4 @@
+import contextlib
 import types
 import typing
 
@@ -5,6 +6,7 @@ import aiohttp
 import typing_extensions
 
 from velum import errors
+from velum import files
 from velum import models
 from velum import routes
 from velum.internal import data_binding
@@ -15,6 +17,7 @@ __all__: typing.Sequence[str] = ("RESTClient",)
 
 
 _REST_URL: typing.Final[str] = "https://api.eludris.gay/"
+_CDN_URL: typing.Final[str] = "https://cdn.eludris.gay/"
 _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 
@@ -22,7 +25,7 @@ class RESTClient(rest_trait.RESTClient):
 
     __slots__ = (
         "_entity_factory",
-        "_rest_url",
+        "_routes",
         "_session",
     )
 
@@ -31,11 +34,15 @@ class RESTClient(rest_trait.RESTClient):
     def __init__(
         self,
         *,
+        cdn_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
         entity_factory: entity_factory_trait.EntityFactory,
     ):
         self._entity_factory = entity_factory
-        self._rest_url = rest_url or _REST_URL
+        self._routes = {
+            routes.OPRISH: rest_url or _REST_URL,
+            routes.EFFIS: cdn_url or _CDN_URL,
+        }
         self._session = None
 
     @property
@@ -60,6 +67,7 @@ class RESTClient(rest_trait.RESTClient):
 
     async def close(self) -> None:
         await self._assert_and_return_session().close()
+        self._session = None
 
     async def __aenter__(self) -> typing_extensions.Self:
         self.start()
@@ -79,14 +87,22 @@ class RESTClient(rest_trait.RESTClient):
         *,
         query: typing.Optional[typing.Any] = None,
         json: typing.Optional[typing.Any] = None,
+        form_builder: typing.Optional[data_binding.FormBuilder] = None,
     ):
-        url = route.create_url(self._rest_url)
-        response = await self._assert_and_return_session().request(
-            route.method,
-            url,
-            params=query,
-            json=json,
-        )
+        base_url = self._routes[route.destination]
+        url = route.create_url(base_url)
+
+        stack = contextlib.AsyncExitStack()
+        async with stack:
+            form = await form_builder.build(stack) if form_builder else None
+
+            response = await self._assert_and_return_session().request(
+                route.method,
+                url,
+                params=query,
+                json=json,
+                data=form,
+            )
 
         if 200 <= response.status < 300:
             content_type = response.content_type
@@ -96,6 +112,8 @@ class RESTClient(rest_trait.RESTClient):
 
             real_url = str(response.real_url)
             raise errors.HTTPError(f"Expected JSON response. ({content_type=}, {real_url=})")
+
+        print(response.status, await response.read())
 
         raise errors.HTTPError("get good lol")
 
@@ -143,3 +161,20 @@ class RESTClient(rest_trait.RESTClient):
         response = await self._request(routes.GET_RATELIMITS.compile())
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_ratelimits(response)
+
+    async def upload_attachment(
+        self,
+        attachment: files.ResourceLike,
+        /,
+        *,
+        spoiler: bool = False,
+    ) -> models.FileData:
+        form = (
+            data_binding.FormBuilder()
+            .add_resource("file", files.ensure_resource(attachment))
+            .add_field("spoiler", "true" if spoiler else "false", content_type="form-data")
+        )
+
+        response = await self._request(routes.POST_ATTACHMENT.compile(), form_builder=form)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_file_data(response)

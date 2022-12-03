@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import aiohttp
+import concurrent.futures
+import contextlib
 import enum
 import importlib
 import typing
+import typing_extensions
+
+from velum import files
 
 __all__: typing.Sequence[str] = (
     "JSONish",
@@ -143,3 +149,46 @@ def set_json_impl(
 # Set the stdlib `json` module as the default implementation
 
 set_json_impl(impl=JSONImpl.JSON)
+
+
+# Builders
+
+class FormBuilder:
+    """Helper class to generate `aiohttp.FormData`."""
+
+    __slots__: typing.Sequence[str] = ("_executor", "_fields", "_resources")
+
+    def __init__(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> None:
+        self._executor = executor
+        self._fields: typing.List[typing.Tuple[str, str, typing.Optional[str]]] = []
+        self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
+
+    def add_field(
+        self,
+        name: str,
+        data: str,
+        *,
+        content_type: typing.Optional[str] = None,
+    ) -> typing_extensions.Self:
+        self._fields.append((name, data, content_type))
+        return self
+
+    def add_resource(
+        self,
+        name: str,
+        resource: files.Resource[files.AsyncReader],
+    ) -> typing_extensions.Self:
+        self._resources.append((name, resource))
+        return self
+
+    async def build(self, stack: contextlib.AsyncExitStack) -> aiohttp.FormData:
+        form = aiohttp.FormData()
+
+        for field in self._fields:
+            form.add_field(field[0], field[1], content_type=field[2])
+
+        for name, resource in self._resources:
+            stream = await stack.enter_async_context(resource.stream(executor=self._executor))
+            form.add_field(name, stream, filename=stream.filename)
+
+        return form
