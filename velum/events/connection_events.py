@@ -8,6 +8,10 @@ __all__: typing.Sequence[str] = ("ConnectionEvent", "DisconnectEvent")
 class ConnectionEvent(base_events.Event):
     """Event fired when the bot establishes a connection with the gateway."""
 
+    __slots__: typing.Sequence[str] = ()
+
 
 class DisconnectEvent(base_events.Event):
     """Event fired when the bot loses connection with the gateway"""
+
+    __slots__: typing.Sequence[str] = ()

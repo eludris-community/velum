@@ -1,3 +1,4 @@
+import contextlib
 import types
 import typing
 
@@ -5,6 +6,7 @@ import aiohttp
 import typing_extensions
 
 from velum import errors
+from velum import files
 from velum import models
 from velum import routes
 from velum.internal import data_binding
@@ -14,7 +16,8 @@ from velum.traits import rest_trait
 __all__: typing.Sequence[str] = ("RESTClient",)
 
 
-_REST_URL: typing.Final[str] = "https://eludris.tooty.xyz/"
+_REST_URL: typing.Final[str] = "https://api.eludris.gay/"
+_CDN_URL: typing.Final[str] = "https://cdn.eludris.gay/"
 _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 
@@ -22,7 +25,7 @@ class RESTClient(rest_trait.RESTClient):
 
     __slots__ = (
         "_entity_factory",
-        "_rest_url",
+        "_routes",
         "_session",
     )
 
@@ -31,11 +34,15 @@ class RESTClient(rest_trait.RESTClient):
     def __init__(
         self,
         *,
+        cdn_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
         entity_factory: entity_factory_trait.EntityFactory,
     ):
         self._entity_factory = entity_factory
-        self._rest_url = rest_url or _REST_URL
+        self._routes = {
+            routes.OPRISH: rest_url or _REST_URL,
+            routes.EFFIS: cdn_url or _CDN_URL,
+        }
         self._session = None
 
     @property
@@ -60,6 +67,7 @@ class RESTClient(rest_trait.RESTClient):
 
     async def close(self) -> None:
         await self._assert_and_return_session().close()
+        self._session = None
 
     async def __aenter__(self) -> typing_extensions.Self:
         self.start()
@@ -73,20 +81,31 @@ class RESTClient(rest_trait.RESTClient):
     ) -> None:
         await self.close()
 
+    def _complete_route(self, route: routes.CompiledRoute) -> str:
+        base_url = self._routes[route.destination]
+        return route.create_url(base_url)
+
     async def _request(
         self,
         route: routes.CompiledRoute,
         *,
         query: typing.Optional[typing.Any] = None,
         json: typing.Optional[typing.Any] = None,
+        form_builder: typing.Optional[data_binding.FormBuilder] = None,
     ):
-        url = route.create_url(self._rest_url)
-        response = await self._assert_and_return_session().request(
-            route.method,
-            url,
-            params=query,
-            json=json,
-        )
+        url = self._complete_route(route)
+
+        stack = contextlib.AsyncExitStack()
+        async with stack:
+            form = await form_builder.build(stack) if form_builder else None
+
+            response = await self._assert_and_return_session().request(
+                route.method,
+                url,
+                params=query,
+                json=json,
+                data=form,
+            )
 
         if 200 <= response.status < 300:
             content_type = response.content_type
@@ -96,6 +115,8 @@ class RESTClient(rest_trait.RESTClient):
 
             real_url = str(response.real_url)
             raise errors.HTTPError(f"Expected JSON response. ({content_type=}, {real_url=})")
+
+        print(response.status, await response.read())
 
         raise errors.HTTPError("get good lol")
 
@@ -138,3 +159,58 @@ class RESTClient(rest_trait.RESTClient):
         response = await self._request(routes.GET_INFO.compile())
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_instance_info(response)
+
+    async def get_ratelimits(self) -> models.InstanceRatelimits:
+        response = await self._request(routes.GET_RATELIMITS.compile())
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_ratelimits(response)
+
+    # Effis.
+
+    async def upload_to_bucket(
+        self,
+        bucket: str,
+        /,
+        file: files.ResourceLike,
+        *,
+        spoiler: bool = False,
+    ) -> models.FileData:
+        form = (
+            data_binding.FormBuilder()
+            .add_resource("file", files.ensure_resource(file))
+            .add_field("spoiler", "true" if spoiler else "false", content_type="form-data")
+        )
+
+        response = await self._request(routes.POST_FILE.compile(bucket=bucket), form_builder=form)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_file_data(response)
+
+    async def upload_attachment(
+        self,
+        attachment: files.ResourceLike,
+        /,
+        *,
+        spoiler: bool = False,
+    ) -> models.FileData:
+        return await self.upload_to_bucket("attachments", attachment, spoiler=spoiler)
+
+    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+        url = self._complete_route(routes.GET_FILE.compile(bucket=bucket, id=id))
+        return files.URL(url)
+
+    async def fetch_attachment(self, id: int) -> files.URL:
+        return await self.fetch_file_from_bucket("attachments", id)
+
+    async def fetch_file_data_from_bucket(self, bucket: str, /, id: int) -> models.FileData:
+        route = routes.GET_FILE_INFO.compile(bucket=bucket, id=id)
+
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_file_data(response)
+
+    async def fetch_attachment_data(self, id: int) -> models.FileData:
+        return await self.fetch_file_data_from_bucket("attachments", id)
+
+    async def fetch_static_file(self, name: str) -> files.URL:
+        url = self._complete_route(routes.GET_FILE_INFO.compile(name=name))
+        return files.URL(url)

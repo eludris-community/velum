@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
 
 
 _BACKOFF_WINDOW: typing.Final[float] = 15.0
-_GATEWAY_URL: typing.Final[str] = "wss://eludris.tooty.xyz/ws/"
+_GATEWAY_URL: typing.Final[str] = "wss://ws.eludris.gay"
 _HEARTBEAT_INTERVAL: typing.Final[float] = 45.0
 
 # Payload attributes.

@@ -1,5 +1,9 @@
+import types
 import typing
 
+import typing_extensions
+
+from velum import files
 from velum import models
 from velum.traits import entity_factory_trait
 
@@ -24,6 +28,17 @@ class RESTClient(typing.Protocol):
     async def close(self) -> None:
         ...
 
+    async def __aenter__(self) -> typing_extensions.Self:
+        ...
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...
+
     @typing.overload
     async def send_message(self, *, message: models.Message) -> None:
         ...
@@ -40,4 +55,40 @@ class RESTClient(typing.Protocol):
         ...
 
     async def get_instance_info(self) -> models.InstanceInfo:
+        ...
+
+    # Effis.
+
+    async def upload_to_bucket(
+        self,
+        bucket: str,
+        /,
+        file: files.ResourceLike,
+        *,
+        spoiler: bool = False,
+    ) -> models.FileData:
+        ...
+
+    async def upload_attachment(
+        self,
+        attachment: files.ResourceLike,
+        /,
+        *,
+        spoiler: bool = False,
+    ) -> models.FileData:
+        ...
+
+    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+        ...
+
+    async def fetch_attachment(self, id: int) -> files.URL:
+        ...
+
+    async def fetch_file_data_from_bucket(self, bucket: str, /, id: int) -> models.FileData:
+        ...
+
+    async def fetch_attachment_data(self, id: int) -> models.FileData:
+        ...
+
+    async def fetch_static_file(self, name: str) -> files.URL:
         ...
