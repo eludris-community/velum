@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import typing
 
 import attr
@@ -13,6 +14,8 @@ __all__: typing.Sequence[str] = (
     "POST",
     "GET_INFO",
     "POST_MESSAGE",
+    "GET_RATELIMITS",
+    "POST_ATTACHMENT",
 )
 
 
@@ -20,6 +23,8 @@ __all__: typing.Sequence[str] = (
 class Route:
 
     method: str = attr.field()
+
+    destination: str = attr.field()
 
     path_template: str = attr.field()
 
@@ -41,6 +46,10 @@ class CompiledRoute:
     def method(self) -> str:
         return self.route.method
 
+    @property
+    def destination(self) -> str:
+        return self.route.destination
+
     def create_url(self, base_url: str) -> str:
         return base_url + self.compiled_path
 
@@ -51,6 +60,18 @@ class CompiledRoute:
 GET: typing.Final[str] = "GET"
 POST: typing.Final[str] = "POST"
 
-GET_INFO = Route(GET, "/")
-POST_MESSAGE = Route(POST, "/messages")
-GET_RATELIMITS = Route(GET, "/ratelimits")
+OPRISH: typing.Final[str] = sys.intern("OPRISH")
+EFFIS: typing.Final[str] = sys.intern("EFFIS")
+
+
+# Oprish routes.
+
+GET_INFO = Route(GET, OPRISH, "/")
+POST_MESSAGE = Route(POST, OPRISH, "/messages")
+GET_RATELIMITS = Route(GET, OPRISH, "/ratelimits")
+
+
+# Effis routes.
+
+POST_ATTACHMENT = Route(POST, EFFIS, "/")
+POST_FILE = Route(POST, EFFIS, "/{bucket}")
