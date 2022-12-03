@@ -162,6 +162,26 @@ class RESTClient(rest_trait.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_ratelimits(response)
 
+    # Effis.
+
+    async def upload_to_bucket(
+        self,
+        file: files.ResourceLike,
+        /,
+        bucket: str,
+        *,
+        spoiler: bool = False,
+    ) -> models.FileData:
+        form = (
+            data_binding.FormBuilder()
+            .add_resource("file", files.ensure_resource(file))
+            .add_field("spoiler", "true" if spoiler else "false", content_type="form-data")
+        )
+
+        response = await self._request(routes.POST_FILE.compile(bucket=bucket), form_builder=form)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_file_data(response)
+
     async def upload_attachment(
         self,
         attachment: files.ResourceLike,
@@ -169,12 +189,4 @@ class RESTClient(rest_trait.RESTClient):
         *,
         spoiler: bool = False,
     ) -> models.FileData:
-        form = (
-            data_binding.FormBuilder()
-            .add_resource("file", files.ensure_resource(attachment))
-            .add_field("spoiler", "true" if spoiler else "false", content_type="form-data")
-        )
-
-        response = await self._request(routes.POST_ATTACHMENT.compile(), form_builder=form)
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_file_data(response)
+        return await self.upload_to_bucket(attachment, bucket="attachments", spoiler=spoiler)

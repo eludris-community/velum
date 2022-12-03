@@ -57,6 +57,18 @@ class RESTClient(typing.Protocol):
     async def get_instance_info(self) -> models.InstanceInfo:
         ...
 
+    # Effis.
+
+    async def upload_to_bucket(
+        self,
+        attachment: files.ResourceLike,
+        /,
+        bucket: str,
+        *,
+        spoiler: bool = False,
+    ) -> models.FileData:
+        ...
+
     async def upload_attachment(
         self,
         attachment: files.ResourceLike,
