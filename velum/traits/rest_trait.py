@@ -89,3 +89,6 @@ class RESTClient(typing.Protocol):
 
     async def fetch_attachment_data(self, id: int) -> models.FileData:
         ...
+
+    async def fetch_static_file(self, name: str) -> files.URL:
+        ...

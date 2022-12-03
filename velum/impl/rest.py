@@ -210,3 +210,7 @@ class RESTClient(rest_trait.RESTClient):
 
     async def fetch_attachment_data(self, id: int) -> models.FileData:
         return await self.fetch_file_data_from_bucket("attachments", id)
+
+    async def fetch_static_file(self, name: str) -> files.URL:
+        url = self._complete_route(routes.GET_FILE_INFO.compile(name=name))
+        return files.URL(url)
