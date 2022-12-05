@@ -33,7 +33,7 @@ async def on_message(event: velum.MessageCreateEvent):
     if event.author == "velum[speedups]":
         return
 
-    match event.content:
+    match event.content:  # noqa: E999
         case "!speed":
             await bot.rest.send_message("velum[speedups]", "I am the fast.")
 

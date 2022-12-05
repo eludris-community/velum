@@ -10,8 +10,11 @@ import attr
 import typing_extensions
 
 from velum.events import base_events
-from velum.internal import async_utils, class_utils, data_binding
-from velum.traits import event_manager_trait, gateway_trait
+from velum.internal import async_utils
+from velum.internal import class_utils
+from velum.internal import data_binding
+from velum.traits import event_manager_trait
+from velum.traits import gateway_trait
 
 __all__: typing.Sequence[str] = (
     "UnboundConsumerCallback",
