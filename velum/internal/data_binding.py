@@ -137,8 +137,6 @@ def set_json_impl(
             load_json = orjson.loads
             dump_json = lambda obj: orjson.dumps(obj).decode()  # noqa[E731]
             JSONDecodeError = orjson.JSONDecodeError
-
-        finally:
             return
 
     raise TypeError(

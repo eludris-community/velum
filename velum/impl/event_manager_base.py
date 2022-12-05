@@ -10,11 +10,8 @@ import attr
 import typing_extensions
 
 from velum.events import base_events
-from velum.internal import async_utils
-from velum.internal import class_utils
-from velum.internal import data_binding
-from velum.traits import event_manager_trait
-from velum.traits import gateway_trait
+from velum.internal import async_utils, class_utils, data_binding
+from velum.traits import event_manager_trait, gateway_trait
 
 __all__: typing.Sequence[str] = (
     "UnboundConsumerCallback",
@@ -288,9 +285,8 @@ class EventManagerBase(event_manager_trait.EventManager):
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches:
-            if listeners := self._listeners.get(cls):
-                for callback in listeners:
-                    tasks.append(self._invoke_callback(callback, event))
+            for callback in self._listeners.get(cls, ()):
+                tasks.append(self._invoke_callback(callback, event))
 
             if cls not in self._waiters:
                 continue
@@ -404,9 +400,9 @@ class EventManagerBase(event_manager_trait.EventManager):
 
             else:
                 if typing.get_origin(annotation) in _UNIONS:
-                    resolved_types = set(
+                    resolved_types = {
                         class_utils.strip_generic(ann) for ann in typing.get_args(annotation)
-                    )
+                    }
                 else:
                     resolved_types = {class_utils.strip_generic(annotation)}
 

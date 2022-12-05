@@ -443,7 +443,7 @@ class IteratorReader(AsyncReader):
         if buff:
             yield bytes(buff)
 
-    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:  # noqa: C901
         if isinstance(self.data, bytes):
             for i in range(0, len(self.data), _BUFFER_SIZE):
                 yield self.data[i : i + _BUFFER_SIZE]

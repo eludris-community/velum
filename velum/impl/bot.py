@@ -47,6 +47,7 @@ class GatewayBot:
 
     def __init__(
         self,
+        cdn_url: typing.Optional[str] = None,
         gateway_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
         entity_factory_impl: typing.Optional[entity_factory_trait.EntityFactory] = None,
@@ -75,7 +76,11 @@ class GatewayBot:
         self._rest = (
             rest_client_impl
             if rest_client_impl is not None
-            else rest.RESTClient(rest_url=rest_url, entity_factory=self._entity_factory)
+            else rest.RESTClient(
+                rest_url=rest_url,
+                cdn_url=cdn_url,
+                entity_factory=self._entity_factory,
+            )
         )
 
         # Gateway connection.
