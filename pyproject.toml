@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.10"
 aiohttp = "^3.8.3"
 typing-extensions = "^4.4.0"
+pre-commit = "^2.20.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.17.1"
