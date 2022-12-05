@@ -28,7 +28,7 @@ async def on_message(event: velum.MessageCreateEvent):
     if event.author == SELF_AUTHOR:
         return
 
-    match event.content:
+    match event.content:  # noqa: E999
         case "!pog":
             await bot.rest.send_message(SELF_AUTHOR, "Pog!")
 

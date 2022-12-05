@@ -9,14 +9,15 @@ readme = "README.md"
 python = "^3.10"
 aiohttp = "^3.8.3"
 typing-extensions = "^4.4.0"
+pre-commit = "^2.20.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.17.1"
 pyright = "^1.1.280"
 isort = "^5.10.1"
 black = "^22.10.0"
-flake8 = "^5.0.4"
 slotscheck = "^0.16.1"
+ruff = "^0.0.155"
 
 [tool.poetry.group.speedups.dependencies]
 aiohttp = {extras = ["speedups"], version = "^3.8.3"}
@@ -53,3 +54,20 @@ exclude-classes = """
     |^velum\\.internal\\.data_binding:(_JSONLoader|_JSONDumper)$
 )
 """
+
+[tool.ruff]
+line-length = 105
+
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    # "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+
+target-version = "py310"
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
