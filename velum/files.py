@@ -458,8 +458,7 @@ class IteratorReader(AsyncReader):
         elif isinstance(self.data, typing.Iterator):
             try:
                 while True:
-                    # pyright: ignore
-                    yield self._assert_bytes(next(self.data))
+                    yield self._assert_bytes(next(self.data))  # pyright: ignore
             except StopIteration:
                 pass
 
