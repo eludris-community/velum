@@ -6,16 +6,16 @@ SELF_AUTHOR = "Velum"  # Author name to use for messages sent to eludris.
 VELUM_URL = "https://github.com/Chromosomologist/velum"
 
 
-# By default, the bot will connect to the default eludris instance at
+# By default, the client will connect to the default eludris instance at
 #
 # GATEWAY:  wss://eludris.tooty.xyz/ws/
 # REST:     https://eludris.tooty.xyz/
 #
 # Custom gateway and rest urls, pointing to some other eludris instance,
-# can be set though the bot constructor's `gateway_url` and `rest_url`
+# can be set though the client constructor's `gateway_url` and `rest_url`
 # arguments.
 
-bot = velum.GatewayBot()
+bot = velum.GatewayClient()
 
 
 # Register a listener for messages.
@@ -39,6 +39,6 @@ async def on_message(event: velum.MessageCreateEvent):
             return
 
 
-# Start the bot!
+# Start the client!
 
 asyncio.run(bot.start())

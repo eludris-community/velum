@@ -2,7 +2,7 @@ import asyncio
 
 import velum
 
-bot = velum.GatewayBot()
+client = velum.GatewayClient()
 
 
 def file_attachment() -> velum.Resource[velum.AsyncReader]:
@@ -27,7 +27,7 @@ def raw_attachment() -> velum.Resource:
 
 
 async def main():
-    async with bot.rest as rest_client:
+    async with client.rest as rest_client:
         resp = await rest_client.upload_attachment(raw_attachment(), spoiler=True)
 
     print(resp)

@@ -24,7 +24,7 @@ _T = typing.TypeVar("_T")
 _MaybeType = typing.Optional[typing.Type[_T]]
 
 
-_LOGGER = logging.getLogger("velum.bot")
+_LOGGER = logging.getLogger("velum.client")
 
 
 class GatewayClient:
@@ -95,7 +95,7 @@ class GatewayClient:
 
     async def start(self) -> None:
         if self._closing_event:
-            raise RuntimeError("Cannot start an already running bot.")
+            raise RuntimeError("Cannot start an already running client.")
 
         start_time = time.monotonic()
         self._closing_event = asyncio.Event()
@@ -112,7 +112,7 @@ class GatewayClient:
 
     async def close(self) -> None:
         if not self._closing_event:
-            raise RuntimeError("Cannot close an inactive bot.")
+            raise RuntimeError("Cannot close an inactive client.")
 
         if self._closing_event.is_set():
             return

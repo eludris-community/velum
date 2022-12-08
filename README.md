@@ -29,14 +29,14 @@ import asyncio
 import velum
 
 
-bot = velum.GatewayBot()
+client = velum.GatewayClient()
 
 
-@bot.listen()
+@client.listen()
 async def listener(event: velum.MessageCreateEvent) -> None:
-    await bot.rest.send_message(f"{event.author} just sent a message!")
+    await client.rest.send_message(f"{event.author} just sent a message!")
 
 
-asyncio.run(bot.start())
+asyncio.run(client.start())
 ```
 For more in-depth examples, please see the [examples directory](https://github.com/Chromosomologist/velum/tree/master/examples).

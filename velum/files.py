@@ -196,7 +196,8 @@ class ThreadedFileReader(AsyncReader):
     do not need to be pickled to be communicated.
     """
 
-    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
+    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field(
+    )
     _pointer: typing.BinaryIO = attr.field()
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
@@ -216,8 +217,10 @@ def _open_path(path: pathlib.Path) -> typing.BinaryIO:
 @attr.define(weakref_slot=False)
 @typing.final
 class _ThreadedFileReader(AsyncReaderContextManager[ThreadedFileReader]):
-    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
-    file: typing.Optional[typing.BinaryIO] = attr.field(default=None, init=False)
+    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field(
+    )
+    file: typing.Optional[typing.BinaryIO] = attr.field(
+        default=None, init=False)
     filename: str = attr.field()
     path: pathlib.Path = attr.field()
 
@@ -346,7 +349,8 @@ class _WebReader(AsyncReaderContextManager[WebReader]):
 
         try:
             resp = await stack.enter_async_context(
-                client_session.request(method, self._web_resource.url, raise_for_status=False)
+                client_session.request(
+                    method, self._web_resource.url, raise_for_status=False)
             )
 
             if 200 <= resp.status < 400:
@@ -446,7 +450,7 @@ class IteratorReader(AsyncReader):
     async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:  # noqa: C901
         if isinstance(self.data, bytes):
             for i in range(0, len(self.data), _BUFFER_SIZE):
-                yield self.data[i : i + _BUFFER_SIZE]
+                yield self.data[i: i + _BUFFER_SIZE]
 
         elif async_utils.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
             try:
@@ -458,7 +462,8 @@ class IteratorReader(AsyncReader):
         elif isinstance(self.data, typing.Iterator):
             try:
                 while True:
-                    yield self._assert_bytes(next(self.data))  # pyright: ignore
+                    # pyright: ignore
+                    yield self._assert_bytes(next(self.data))
             except StopIteration:
                 pass
 
@@ -487,7 +492,8 @@ class IteratorReader(AsyncReader):
             return bytes(data, "utf-8")
 
         if not isinstance(data, bytes):
-            raise TypeError(f"Expected bytes but received {type(data).__name__}")
+            raise TypeError(
+                f"Expected bytes but received {type(data).__name__}")
         return data
 
 
@@ -510,7 +516,8 @@ class _NoOpAsyncReader(AsyncReaderContextManager[ReaderT]):
 class Bytes(Resource[IteratorReader]):
     """Representation of in-memory data to upload."""
 
-    __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "is_spoiler")
+    __slots__: typing.Sequence[str] = (
+        "data", "_filename", "mimetype", "is_spoiler")
 
     data: typing.Union[bytes, LazyByteIterator]
     """The raw data/provider of raw data to upload."""
