@@ -17,17 +17,17 @@ from velum.traits import event_manager_trait
 from velum.traits import gateway_trait
 from velum.traits import rest_trait
 
-__all__: typing.Sequence[str] = ("GatewayBot",)
+__all__: typing.Sequence[str] = ("GatewayClient",)
 
 
 _T = typing.TypeVar("_T")
 _MaybeType = typing.Optional[typing.Type[_T]]
 
 
-_LOGGER = logging.getLogger("velum.bot")
+_LOGGER = logging.getLogger("velum.client")
 
 
-class GatewayBot:
+class GatewayClient:
 
     __slots__ = (
         "_entity_factory",
@@ -95,7 +95,7 @@ class GatewayBot:
 
     async def start(self) -> None:
         if self._closing_event:
-            raise RuntimeError("Cannot start an already running bot.")
+            raise RuntimeError("Cannot start an already running client.")
 
         start_time = time.monotonic()
         self._closing_event = asyncio.Event()
@@ -112,7 +112,7 @@ class GatewayBot:
 
     async def close(self) -> None:
         if not self._closing_event:
-            raise RuntimeError("Cannot close an inactive bot.")
+            raise RuntimeError("Cannot close an inactive client.")
 
         if self._closing_event.is_set():
             return
@@ -140,7 +140,7 @@ class GatewayBot:
 
         self._closing_event = None
 
-        _LOGGER.info("Bot closed successfully.")
+        _LOGGER.info("Client closed successfully.")
 
     @property
     def entity_factory(self) -> entity_factory_trait.EntityFactory:
