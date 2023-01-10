@@ -11,6 +11,7 @@ from velum.impl import event_factory
 from velum.impl import event_manager
 from velum.impl import gateway
 from velum.impl import rest
+from velum.traits import base_traits
 from velum.traits import entity_factory_trait
 from velum.traits import event_factory_trait
 from velum.traits import event_manager_trait
@@ -27,9 +28,14 @@ _MaybeType = typing.Optional[typing.Type[_T]]
 _LOGGER = logging.getLogger("velum.client")
 
 
-class GatewayClient:
+class GatewayClient(
+    base_traits.EntityAware,
+    base_traits.EventAware,
+    base_traits.GatewayAware,
+    base_traits.RESTAware,
+):
 
-    __slots__ = (
+    __slots__: typing.Sequence[str] = (
         "_entity_factory",
         "_event_factory",
         "_event_manager",
