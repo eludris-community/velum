@@ -5,11 +5,12 @@ import typing_extensions
 
 from velum import files
 from velum import models
-from velum.traits import entity_factory_trait
+from velum.api import entity_factory_trait
 
 __all__: typing.Sequence[str] = ("RESTClient",)
 
 
+@typing.runtime_checkable
 class RESTClient(typing.Protocol):
 
     __slots__: typing.Sequence[str] = ()

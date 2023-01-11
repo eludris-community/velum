@@ -2,7 +2,7 @@ import typing
 
 import typing_extensions
 
-from velum.traits import rate_limit_trait
+from velum.api import rate_limit_trait
 
 __all__: typing.Sequence[str] = ("ExponentialBackoff",)
 

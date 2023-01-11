@@ -9,9 +9,9 @@ from velum import errors
 from velum import files
 from velum import models
 from velum import routes
+from velum.api import entity_factory_trait
+from velum.api import rest_trait
 from velum.internal import data_binding
-from velum.traits import entity_factory_trait
-from velum.traits import rest_trait
 
 __all__: typing.Sequence[str] = ("RESTClient",)
 

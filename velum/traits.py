@@ -1,10 +1,10 @@
 import typing
 
-from velum.traits import entity_factory_trait
-from velum.traits import event_factory_trait
-from velum.traits import event_manager_trait
-from velum.traits import gateway_trait
-from velum.traits import rest_trait
+from velum.api import entity_factory_trait
+from velum.api import event_factory_trait
+from velum.api import event_manager_trait
+from velum.api import gateway_trait
+from velum.api import rest_trait
 
 __all__: typing.Sequence[str] = (
     "EntityFactoryAware",

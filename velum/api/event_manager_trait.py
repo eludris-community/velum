@@ -1,13 +1,17 @@
 import asyncio
 import typing
 
+from velum.api import gateway_trait
 from velum.events import base_events
 from velum.internal import data_binding
-from velum.traits import gateway_trait
+
+__all__: typing.Sequence[str] = ("EventManager",)
+
 
 EventPredicateT = typing.Callable[[base_events.EventT], bool]
 
 
+@typing.runtime_checkable
 class EventManager(typing.Protocol):
 
     __slots__: typing.Sequence[str] = ()

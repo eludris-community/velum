@@ -10,13 +10,13 @@ import typing
 import aiohttp
 
 from velum import errors
+from velum.api import event_manager_trait
+from velum.api import gateway_trait
+from velum.api import rate_limit_trait
 from velum.events import connection_events
 from velum.impl import rate_limits
 from velum.internal import async_utils
 from velum.internal import data_binding
-from velum.traits import event_manager_trait
-from velum.traits import gateway_trait
-from velum.traits import rate_limit_trait
 
 __all__: typing.Sequence[str] = ("GatewayHandler",)
 

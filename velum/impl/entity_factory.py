@@ -1,8 +1,8 @@
 import typing
 
 from velum import models
+from velum.api import entity_factory_trait
 from velum.internal import data_binding
-from velum.traits import entity_factory_trait
 
 __all__: typing.Sequence[str] = ("EntityFactory",)
 

@@ -1,10 +1,10 @@
 import typing
 
+from velum.api import event_factory_trait
+from velum.api import gateway_trait
 from velum.events import message_events
 from velum.impl import event_manager_base
 from velum.internal import data_binding
-from velum.traits import event_factory_trait
-from velum.traits import gateway_trait
 
 __all__: typing.Sequence[str] = ("EventManager",)
 

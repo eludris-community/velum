@@ -10,6 +10,7 @@ __version__: typing.Final[str] = "0.2.0"
 
 
 from velum import events as events
+from velum import traits as traits
 from velum.errors import *
 from velum.events import Event as Event
 from velum.events import ExceptionEvent as ExceptionEvent

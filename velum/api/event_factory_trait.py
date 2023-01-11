@@ -1,10 +1,13 @@
 import typing
 
+from velum.api import gateway_trait as gateway_trait
 from velum.events import message_events
 from velum.internal import data_binding
-from velum.traits import gateway_trait as gateway_trait
+
+__all__: typing.Sequence[str] = ("EventFactory",)
 
 
+@typing.runtime_checkable
 class EventFactory(typing.Protocol):
 
     __slots__: typing.Sequence[str] = ()
