@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "velum"
-version = "0.3.0"
+version = "0.4.0"
 description = "An opinionated wrapper for the Eludris API."
 authors = ["Chromosomologist <chromosomologist@gmail.com>"]
 readme = "README.md"
@@ -29,10 +29,10 @@ orjson = "^3.8.2"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.isort]
-profile = "black"
-force_single_line = true
-skip_glob = "**/__init__.pyi"
+# [tool.isort]
+# profile = "black"
+# force_single_line = true
+# skip_glob = "**/__init__.pyi"
 
 [tool.pyright]
 include = ["velum", "examples"]
@@ -62,7 +62,7 @@ select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
-    # "I",  # isort
+    "I",  # isort
     "C",  # flake8-comprehensions
     "B",  # flake8-bugbear
 ]
