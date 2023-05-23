@@ -19,6 +19,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
 
     def deserialize_instance_info(self, payload: data_binding.JSONObject) -> models.InstanceInfo:
         instance_name = typing.cast(str, payload["instance_name"])
+        version = typing.cast(str, payload["version"])
         description = typing.cast(typing.Optional[str], payload["description"])
         message_limit = typing.cast(str, payload["message_limit"])
         oprish_url = typing.cast(str, payload["oprish_url"])
@@ -27,25 +28,33 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         file_size = typing.cast(str, payload["file_size"])
         attachment_file_size = typing.cast(str, payload["attachment_file_size"])
 
+        rate_limits = typing.cast(
+            typing.Optional[data_binding.JSONObject], payload.get("rate_limits")
+        )
+        if rate_limits is not None:
+            rate_limits = self.deserialize_ratelimits(rate_limits)
+
         return models.InstanceInfo(
             instance_name=instance_name,
             description=description,
+            version=version,
             message_limit=int(message_limit),
             oprish_url=oprish_url,
             pandemonium_url=pandemonium_url,
             effis_url=effis_url,
             file_size=int(file_size),
             attachment_file_size=int(attachment_file_size),
+            rate_limits=rate_limits,
         )
 
     def _deserialize_ratelimit_config(
         self,
         payload: data_binding.JSONObject,
-    ) -> models.RatelimitConfig:
+    ) -> models.RatelimitConf:
         reset_after = typing.cast(str, payload["reset_after"])
         limit = typing.cast(str, payload["limit"])
 
-        return models.RatelimitConfig(reset_after=int(reset_after), limit=int(limit))
+        return models.RatelimitConf(reset_after=int(reset_after), limit=int(limit))
 
     def _deserialize_oprish_ratelimits(
         self,
@@ -70,12 +79,12 @@ class EntityFactory(entity_factory_trait.EntityFactory):
     def _deserialize_effis_ratelimit_config(
         self,
         payload: data_binding.JSONObject,
-    ) -> models.EffisRatelimitConfig:
+    ) -> models.EffisRatelimitConf:
         reset_after = typing.cast(str, payload["reset_after"])
         limit = typing.cast(str, payload["limit"])
         file_size_limit = typing.cast(str, payload["file_size_limit"])
 
-        return models.EffisRatelimitConfig(
+        return models.EffisRatelimitConf(
             reset_after=int(reset_after),
             limit=int(limit),
             file_size_limit=file_size_limit,
@@ -91,8 +100,11 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         attachments = self._deserialize_effis_ratelimit_config(
             typing.cast(data_binding.JSONObject, payload["attachments"])
         )
+        fetch_file = self._deserialize_ratelimit_config(
+            typing.cast(data_binding.JSONObject, payload["fetch_file"])
+        )
 
-        return models.EffisRatelimits(assets=assets, attachments=attachments)
+        return models.EffisRatelimits(assets=assets, attachments=attachments, fetch_file=fetch_file)
 
     def deserialize_ratelimits(self, payload: data_binding.JSONObject) -> models.InstanceRatelimits:
         oprish = self._deserialize_oprish_ratelimits(
