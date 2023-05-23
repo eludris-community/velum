@@ -278,7 +278,12 @@ class EventManagerBase(event_manager_trait.EventManager):
         gateway_connection: gateway_trait.GatewayHandler,
         payload: data_binding.JSONObject,
     ) -> None:
-        consumer = self._consumers[event_name.lower()]
+        consumer = self._consumers.get(event_name.lower())
+
+        if not consumer:
+            _LOGGER.warning("Unhandled event: %r", event_name.lower())
+            return
+
         asyncio.create_task(
             self._handle_consumption(consumer, gateway_connection, payload),
             name=f"dispatch {event_name}",
@@ -438,7 +443,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         try:
             waiter_set = self._waiters[event_type]
         except KeyError:
-            self._waiters[event_type] = waiter_set = set()
+            waiter_set = self._waiters[event_type] = set()
             self._increment_waiter_group_count(event_type, 1)
 
         pair = (predicate, future)
