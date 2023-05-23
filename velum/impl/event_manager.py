@@ -2,6 +2,7 @@ import typing
 
 from velum.api import event_factory_trait
 from velum.api import gateway_trait
+from velum.events import connection_events
 from velum.events import message_events
 from velum.impl import event_manager_base
 from velum.internal import data_binding
@@ -25,4 +26,24 @@ class EventManager(event_manager_base.EventManagerBase):
     ) -> None:
         await self.dispatch(
             self._event_factory.deserialize_message_create_event(gateway_connection, payload)
+        )
+
+    @event_manager_base.is_consumer_for(connection_events.HelloEvent)
+    async def on_hello(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> None:
+        await self.dispatch(
+            self._event_factory.deserialize_hello_event(gateway_connection, payload)
+        )
+
+    @event_manager_base.is_consumer_for(connection_events.RatelimitEvent)
+    async def on_ratelimit(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> None:
+        await self.dispatch(
+            self._event_factory.deserialize_ratelimit_event(gateway_connection, payload)
         )
