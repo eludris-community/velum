@@ -1,6 +1,7 @@
 import typing
 
 from velum.api import gateway_trait as gateway_trait
+from velum.events import connection_events
 from velum.events import message_events
 from velum.internal import data_binding
 
@@ -17,4 +18,18 @@ class EventFactory(typing.Protocol):
         gateway_connection: gateway_trait.GatewayHandler,
         payload: data_binding.JSONObject,
     ) -> message_events.MessageCreateEvent:
+        ...
+
+    def deserialize_hello_event(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> connection_events.HelloEvent:
+        ...
+
+    def deserialize_ratelimit_event(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> connection_events.RatelimitEvent:
         ...
