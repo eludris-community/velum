@@ -20,11 +20,6 @@ repos:
     hooks:
       - id: poetry-check
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
-
   - repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
@@ -32,6 +27,7 @@ repos:
         language_version: python3
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.150
+    rev: v0.0.269
     hooks:
       - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
