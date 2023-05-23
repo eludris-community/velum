@@ -150,3 +150,33 @@ class EntityFactory(entity_factory_trait.EntityFactory):
             spoiler=True if spoiler else False,
             metadata=metadata,
         )
+
+    def _deserialize_pandemonium_config(
+        self, payload: data_binding.JSONObject
+    ) -> models.PandemoniumConf:
+        url = typing.cast(str, payload["url"])
+        rate_limit = self._deserialize_ratelimit_config(
+            typing.cast(data_binding.JSONObject, payload["rate_limit"])
+        )
+
+        return models.PandemoniumConf(url=url, rate_limit=rate_limit)
+
+    def deserialize_hello(self, payload: data_binding.JSONObject) -> models.Hello:
+        heartbeat_interval = typing.cast(str, payload["heartbeat_interval"])
+        instance_info = self.deserialize_instance_info(
+            typing.cast(data_binding.JSONObject, payload["instance_info"])
+        )
+        pandemonium_info = self._deserialize_pandemonium_config(
+            typing.cast(data_binding.JSONObject, payload["pandemonium_info"])
+        )
+
+        return models.Hello(
+            heartbeat_interval=int(heartbeat_interval),
+            instance_info=instance_info,
+            pandemonium_info=pandemonium_info,
+        )
+
+    def deserialize_ratelimit(self, payload: data_binding.JSONObject) -> models.RatelimitData:
+        wait = typing.cast(str, payload["wait"])
+
+        return models.RatelimitData(wait=int(wait))
