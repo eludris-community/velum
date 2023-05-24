@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import random
 import sys
 import time
 import typing
@@ -392,8 +393,15 @@ class GatewayHandler(gateway_trait.GatewayHandler):
     async def _heartbeat(self, heartbeat_interval: float) -> None:
         assert self._gateway_ws is not None
 
+        jitter = random.random() * heartbeat_interval
         self._last_heartbeat_ack = time.monotonic()
-        self._logger.debug("Starting heartbeat with interval %s [s].", heartbeat_interval)
+        self._logger.debug(
+            "Waiting %.2f [s] before starting heartbeat with interval %.2f [s].",
+            jitter,
+            heartbeat_interval,
+        )
+
+        await asyncio.sleep(jitter)
 
         while True:
 
