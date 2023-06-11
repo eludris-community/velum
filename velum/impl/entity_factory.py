@@ -8,7 +8,6 @@ __all__: typing.Sequence[str] = ("EntityFactory",)
 
 
 class EntityFactory(entity_factory_trait.EntityFactory):
-
     __slots__ = ()
 
     def deserialize_message(self, payload: data_binding.JSONObject) -> models.Message:
@@ -21,12 +20,12 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         instance_name = typing.cast(str, payload["instance_name"])
         version = typing.cast(str, payload["version"])
         description = typing.cast(typing.Optional[str], payload["description"])
-        message_limit = typing.cast(str, payload["message_limit"])
+        message_limit = typing.cast(int, payload["message_limit"])
         oprish_url = typing.cast(str, payload["oprish_url"])
         pandemonium_url = typing.cast(str, payload["pandemonium_url"])
         effis_url = typing.cast(str, payload["effis_url"])
-        file_size = typing.cast(str, payload["file_size"])
-        attachment_file_size = typing.cast(str, payload["attachment_file_size"])
+        file_size = typing.cast(int, payload["file_size"])
+        attachment_file_size = typing.cast(int, payload["attachment_file_size"])
 
         rate_limits = typing.cast(
             typing.Optional[data_binding.JSONObject], payload.get("rate_limits")
@@ -51,10 +50,10 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         self,
         payload: data_binding.JSONObject,
     ) -> models.RatelimitConf:
-        reset_after = typing.cast(str, payload["reset_after"])
-        limit = typing.cast(str, payload["limit"])
+        reset_after = typing.cast(int, payload["reset_after"])
+        limit = typing.cast(int, payload["limit"])
 
-        return models.RatelimitConf(reset_after=int(reset_after), limit=int(limit))
+        return models.RatelimitConf(reset_after=reset_after, limit=limit)
 
     def _deserialize_oprish_ratelimits(
         self,
@@ -80,13 +79,13 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         self,
         payload: data_binding.JSONObject,
     ) -> models.EffisRatelimitConf:
-        reset_after = typing.cast(str, payload["reset_after"])
-        limit = typing.cast(str, payload["limit"])
-        file_size_limit = typing.cast(str, payload["file_size_limit"])
+        reset_after = typing.cast(int, payload["reset_after"])
+        limit = typing.cast(int, payload["limit"])
+        file_size_limit = typing.cast(int, payload["file_size_limit"])
 
         return models.EffisRatelimitConf(
-            reset_after=int(reset_after),
-            limit=int(limit),
+            reset_after=reset_after,
+            limit=limit,
             file_size_limit=file_size_limit,
         )
 
@@ -125,30 +124,22 @@ class EntityFactory(entity_factory_trait.EntityFactory):
 
     def _deserialize_file_metadata(self, payload: data_binding.JSONObject) -> models.FileMetadata:
         type_ = typing.cast(str, payload["type"])
-        width = typing.cast(typing.Optional[str], payload.get("width"))
-        height = typing.cast(typing.Optional[str], payload.get("height"))
+        width = typing.cast(typing.Optional[int], payload.get("width"))
+        height = typing.cast(typing.Optional[int], payload.get("height"))
 
-        return models.FileMetadata(
-            type=type_,
-            width=int(width) if width else None,
-            height=int(height) if height else None,
-        )
+        return models.FileMetadata(type=type_, width=width, height=height)
 
     def deserialize_file_data(self, payload: data_binding.JSONObject) -> models.FileData:
-        id = typing.cast(str, payload["id"])
+        id = typing.cast(int, payload["id"])
         name = typing.cast(str, payload["name"])
         bucket = typing.cast(str, payload["bucket"])
-        spoiler = typing.cast(typing.Optional[str], payload.get("spoiler"))
+        spoiler = typing.cast(typing.Optional[bool], payload.get("spoiler"))
         metadata = self._deserialize_file_metadata(
             typing.cast(data_binding.JSONObject, payload["metadata"])
         )
 
         return models.FileData(
-            id=int(id),
-            name=name,
-            bucket=bucket,
-            spoiler=True if spoiler else False,
-            metadata=metadata,
+            id=id, name=name, bucket=bucket, spoiler=bool(spoiler), metadata=metadata
         )
 
     def _deserialize_pandemonium_config(
@@ -162,7 +153,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         return models.PandemoniumConf(url=url, rate_limit=rate_limit)
 
     def deserialize_hello(self, payload: data_binding.JSONObject) -> models.Hello:
-        heartbeat_interval = typing.cast(str, payload["heartbeat_interval"])
+        heartbeat_interval = typing.cast(int, payload["heartbeat_interval"])
         instance_info = self.deserialize_instance_info(
             typing.cast(data_binding.JSONObject, payload["instance_info"])
         )
@@ -171,12 +162,12 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         )
 
         return models.Hello(
-            heartbeat_interval=int(heartbeat_interval),
+            heartbeat_interval=heartbeat_interval,
             instance_info=instance_info,
             pandemonium_info=pandemonium_info,
         )
 
     def deserialize_ratelimit(self, payload: data_binding.JSONObject) -> models.RatelimitData:
-        wait = typing.cast(str, payload["wait"])
+        wait = typing.cast(int, payload["wait"])
 
-        return models.RatelimitData(wait=int(wait))
+        return models.RatelimitData(wait=wait)
