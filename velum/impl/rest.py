@@ -155,15 +155,13 @@ class RESTClient(rest_trait.RESTClient):
 
         await self._request(routes.POST_MESSAGE.compile(), json=body)
 
-    async def get_instance_info(self) -> models.InstanceInfo:
-        response = await self._request(routes.GET_INFO.compile())
+    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+        query = {"ratelimits": "1"} if rate_limits else None
+        response = await self._request(
+            routes.GET_INFO.compile(), query=query
+        )
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_instance_info(response)
-
-    async def get_ratelimits(self) -> models.InstanceRatelimits:
-        response = await self._request(routes.GET_RATELIMITS.compile())
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_ratelimits(response)
 
     # Effis.
 

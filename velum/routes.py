@@ -14,7 +14,6 @@ __all__: typing.Sequence[str] = (
     "POST",
     "GET_INFO",
     "POST_MESSAGE",
-    "GET_RATELIMITS",
     "POST_ATTACHMENT",
 )
 
@@ -68,7 +67,6 @@ EFFIS: typing.Final[str] = sys.intern("EFFIS")
 
 GET_INFO = Route(GET, OPRISH, "/")
 POST_MESSAGE = Route(POST, OPRISH, "/messages")
-GET_RATELIMITS = Route(GET, OPRISH, "/ratelimits")
 
 
 # Effis routes.
