@@ -73,24 +73,10 @@ class EffisRatelimitConf(RatelimitConf):
     Unlike normal ratelimits, these also include a file size limit.
     """
 
-    file_size_limit: str = attr.field()
-    """The maximum total filesize that can be requested
-    in the timeframe denoted by ``reset_after``, in a human-readable format.
+    file_size_limit: int = attr.field()
+    """The maximum total filesize in bytes that can be requested in the
+    timeframe denoted by ``reset_after``.
     """
-
-    @property
-    def file_size_limit_bytes(self) -> int:
-        """The maximum file size limit expressed in bytes as an integer."""
-
-        _UNITS = (None, "K", "M", "G")
-
-        match = re.match(r"(\d+)(K|M)?i?B", self.file_size_limit)
-        assert match
-
-        base = int(match.group(1))
-        factor = _UNITS.index(match.group(2)) * 10
-
-        return base << factor
 
 
 @attr.define(kw_only=True, weakref_slot=False)
