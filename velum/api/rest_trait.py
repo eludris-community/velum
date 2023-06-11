@@ -55,7 +55,7 @@ class RESTClient(typing.Protocol):
     ) -> None:
         ...
 
-    async def get_instance_info(self) -> models.InstanceInfo:
+    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
         ...
 
     # Effis.
