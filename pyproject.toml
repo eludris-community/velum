@@ -12,7 +12,7 @@ typing-extensions = "^4.4.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.17.1"
-pyright = "^1.1.280"
+pyright = "^1.1.313"
 isort = "^5.10.1"
 black = "^22.10.0"
 slotscheck = "^0.16.1"
