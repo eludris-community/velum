@@ -47,7 +47,6 @@ _HELLO: typing.Final[str] = sys.intern("HELLO")
 
 
 class GatewayWebsocket:
-
     __slots__ = (
         "_gateway_url",
         "_logger",
@@ -180,7 +179,6 @@ class GatewayWebsocket:
 
 
 class GatewayHandler(gateway_trait.GatewayHandler):
-
     __slots__ = (
         "_connection_event",
         "_event_manager",
@@ -404,7 +402,6 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         await asyncio.sleep(jitter)
 
         while True:
-
             if self._last_heartbeat_ack <= self._last_heartbeat:
                 self._logger.error(
                     "Heartbeat was not acknowledged for approximately %.2f [s], "

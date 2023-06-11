@@ -13,7 +13,6 @@ __all__: typing.Sequence[str] = ("EventFactory",)
 
 
 class EventFactory(event_factory_trait.EventFactory):
-
     __slots__ = ("_entity_factory",)
 
     def __init__(self, entity_factory: entity_factory_trait.EntityFactory):

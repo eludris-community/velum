@@ -10,7 +10,6 @@ __all__: typing.Sequence[str] = ("EventFactory",)
 
 @typing.runtime_checkable
 class EventFactory(typing.Protocol):
-
     __slots__: typing.Sequence[str] = ()
 
     def deserialize_message_create_event(

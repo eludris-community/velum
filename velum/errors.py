@@ -18,7 +18,6 @@ class VelumError(RuntimeError):
 
 @attr.define(auto_exc=True, repr=False, slots=False)
 class GatewayError(VelumError):
-
     reason: str = attr.field()
 
     def __str__(self) -> str:
@@ -33,7 +32,6 @@ class GatewayConnectionError(GatewayError):
 
 @attr.define(auto_exc=True, repr=False, slots=False)
 class GatewayConnectionClosedError(GatewayError):
-
     code: typing.Optional[int | None] = attr.field()
 
     def __str__(self) -> str:
@@ -42,5 +40,4 @@ class GatewayConnectionClosedError(GatewayError):
 
 @attr.define(auto_exc=True, repr=False, slots=False)
 class HTTPError(VelumError):
-
     message: str = attr.field()

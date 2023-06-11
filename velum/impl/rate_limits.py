@@ -8,7 +8,6 @@ __all__: typing.Sequence[str] = ("ExponentialBackoff",)
 
 
 class ExponentialBackoff(rate_limit_trait.RateLimiter):
-
     __slots__ = ("base", "maximum", "increment", "_initial_increment")
 
     base: float

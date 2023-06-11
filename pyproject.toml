@@ -14,15 +14,15 @@ typing-extensions = "^4.4.0"
 ipykernel = "^6.17.1"
 pyright = "^1.1.313"
 isort = "^5.10.1"
-black = "^22.10.0"
+black = "^23.3.0"
 slotscheck = "^0.16.1"
 ruff = "^0.0.269"
 pre-commit = "^2.20.0"
 
 [tool.poetry.group.speedups.dependencies]
-aiohttp = {extras = ["speedups"], version = "^3.8.3"}
+aiohttp = { extras = ["speedups"], version = "^3.8.3" }
 ciso8601 = "^2.2.0"
-uvloop = {version = "^0.17.0", platform = "linux"}
+uvloop = { version = "^0.17.0", platform = "linux" }
 orjson = "^3.8.2"
 
 [build-system]
@@ -59,12 +59,12 @@ exclude-classes = """
 line-length = 105
 
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "C", # flake8-comprehensions
+    "B", # flake8-bugbear
 ]
 
 target-version = "py310"
