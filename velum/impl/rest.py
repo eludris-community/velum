@@ -96,6 +96,7 @@ class RESTClient(rest_trait.RESTClient):
         *,
         json: typing.Optional[typing.Any] = None,
         form_builder: typing.Optional[data_binding.FormBuilder] = None,
+        query: typing.Optional[typing.Mapping[str, str]] = None,
     ):
         url = self._complete_route(route)
         headers: typing.Dict[str, str] = {}
@@ -136,48 +137,8 @@ class RESTClient(rest_trait.RESTClient):
 
         raise errors.HTTPError("get good lol")
 
-    @typing.overload
-    async def send_message(self, *, message: models.Message) -> None:
-        ...
-
-    @typing.overload
-    async def send_message(
-        self,
-        author: str,
-        message: str,
-    ) -> None:
-        ...
-
-    async def send_message(
-        self,
-        author: typing.Optional[str] = None,
-        message: typing.Optional[models.Message | str] = None,
-    ) -> None:
-        if isinstance(message, models.Message):
-            body = {
-                "author": message.author,
-                "content": message.content,
-            }
-        elif author is not None:
-            body = {
-                "author": author,
-                "content": message,
-            }
-        else:
-            raise TypeError(
-                f"Please provide either a fully qualified {models.Message.__qualname__}, "
-                "or an author and a message string."
-            )
-
-        await self._request(routes.POST_MESSAGE.compile(), json=body)
-
-    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
-        query = {"ratelimits": "1"} if rate_limits else None
-        response = await self._request(routes.GET_INFO.compile(), query=query)
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_instance_info(response)
-
-    # Effis.
+    # Ordered by docs.
+    # Files.
 
     async def upload_to_bucket(
         self,
@@ -226,3 +187,19 @@ class RESTClient(rest_trait.RESTClient):
     async def fetch_static_file(self, name: str) -> files.URL:
         url = self._complete_route(routes.GET_FILE_INFO.compile(name=name))
         return files.URL(url)
+
+    # Instance.
+
+    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+        query = {"ratelimits": "1"} if rate_limits else {}
+        response = await self._request(routes.GET_INFO.compile(), query=query)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_instance_info(response)
+
+    # Messaging.
+
+    async def send_message(self, content: str) -> models.Message:
+        body = {"content": content}
+        response = await self._request(routes.CREATE_MESSAGE.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)

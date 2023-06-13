@@ -39,25 +39,8 @@ class RESTClient(typing.Protocol):
     ) -> None:
         ...
 
-    @typing.overload
-    async def send_message(self, *, message: models.Message) -> None:
-        ...
-
-    @typing.overload
-    async def send_message(self, author: str, message: str) -> None:
-        ...
-
-    async def send_message(
-        self,
-        author: typing.Optional[str] = None,
-        message: typing.Optional[models.Message | str] = None,
-    ) -> None:
-        ...
-
-    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
-        ...
-
-    # Effis.
+    # Ordered by docs.
+    # Files.
 
     async def upload_to_bucket(
         self,
@@ -91,4 +74,14 @@ class RESTClient(typing.Protocol):
         ...
 
     async def fetch_static_file(self, name: str) -> files.URL:
+        ...
+
+    # Instance.
+
+    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+        ...
+
+    # Messaging.
+
+    async def send_message(self, content: str) -> models.Message:
         ...

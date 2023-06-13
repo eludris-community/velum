@@ -12,9 +12,10 @@ __all__: typing.Sequence[str] = (
     "CompiledRoute",
     "GET",
     "POST",
+    "PATCH",
+    "DELETE",
     "GET_INFO",
-    "POST_MESSAGE",
-    "POST_ATTACHMENT",
+    "CREATE_MESSAGE",
 )
 
 
@@ -26,8 +27,12 @@ class Route:
 
     path_template: str = attr.field()
 
+    requires_authentication: typing.Optional[bool] = attr.field(default=None)
+
     def compile(self, **url_params: typing.Any) -> CompiledRoute:
-        return CompiledRoute(self, self.path_template.format_map(url_params))
+        return CompiledRoute(
+            self, self.path_template.format_map(url_params), self.requires_authentication
+        )
 
     def __str__(self) -> str:
         return self.path_template
@@ -38,6 +43,8 @@ class CompiledRoute:
     route: Route = attr.field()
 
     compiled_path: str = attr.field()
+
+    requires_authentication: typing.Optional[bool] = attr.field(default=None)
 
     @property
     def method(self) -> str:
@@ -56,18 +63,14 @@ class CompiledRoute:
 
 GET: typing.Final[str] = "GET"
 POST: typing.Final[str] = "POST"
+PATCH: typing.Final[str] = "PATCH"
+DELETE: typing.Final[str] = "DELETE"
 
 OPRISH: typing.Final[str] = sys.intern("OPRISH")
 EFFIS: typing.Final[str] = sys.intern("EFFIS")
 
 
-# Oprish routes.
-
-GET_INFO = Route(GET, OPRISH, "/")
-POST_MESSAGE = Route(POST, OPRISH, "/messages")
-
-
-# Effis routes.
+# Files.
 
 POST_ATTACHMENT = Route(POST, EFFIS, "/")
 GET_ATTACHMENT = Route(GET, EFFIS, "/{id}")
@@ -76,3 +79,11 @@ POST_FILE = Route(POST, EFFIS, "/{bucket}")
 GET_FILE = Route(GET, EFFIS, "/{bucket}/{id}")
 GET_FILE_INFO = Route(GET, EFFIS, "/{bucket}/{id}/data")
 GET_STATIC_FILE = Route(GET, EFFIS, "/static/{name}")
+
+# Instance.
+
+GET_INFO = Route(GET, OPRISH, "/")
+
+# Messaging.
+
+CREATE_MESSAGE = Route(POST, OPRISH, "/messages", True)
