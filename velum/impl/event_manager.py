@@ -67,3 +67,13 @@ class EventManager(event_manager_base.EventManagerBase):
         await self.dispatch(
             self._event_factory.deserialize_user_update_event(gateway_connection, payload)
         )
+
+    @event_manager_base.is_consumer_for(user_events.PresenceUpdateEvent)
+    async def on_presence_update(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> None:
+        await self.dispatch(
+            self._event_factory.deserialize_presence_update_event(gateway_connection, payload)
+        )

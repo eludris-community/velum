@@ -59,3 +59,12 @@ class EventFactory(event_factory_trait.EventFactory):
         payload: data_binding.JSONObject,
     ) -> user_events.UserUpdateEvent:
         return user_events.UserUpdateEvent(user=self._entity_factory.deserialize_user(payload))
+
+    def deserialize_presence_update_event(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> user_events.PresenceUpdateEvent:
+        return user_events.PresenceUpdateEvent(
+            data=self._entity_factory.deserialize_presence_update(payload)
+        )

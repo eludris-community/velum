@@ -177,3 +177,11 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         users = typing.cast(typing.List[models.User], payload["users"])
 
         return models.Authenticated(user=user, users=users)
+
+    def deserialize_presence_update(
+        self, payload: data_binding.JSONObject
+    ) -> models.PresenceUpdate:
+        user_id = typing.cast(int, payload["user_id"])
+        status = self._deserialize_status(typing.cast(data_binding.JSONObject, payload["status"]))
+
+        return models.PresenceUpdate(user_id=user_id, status=status)

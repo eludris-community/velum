@@ -30,3 +30,8 @@ class EntityFactory(typing.Protocol):
 
     def deserialize_authenticated(self, payload: data_binding.JSONObject) -> models.Authenticated:
         ...
+
+    def deserialize_presence_update(
+        self, payload: data_binding.JSONObject
+    ) -> models.PresenceUpdate:
+        ...

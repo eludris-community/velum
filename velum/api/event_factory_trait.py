@@ -47,3 +47,10 @@ class EventFactory(typing.Protocol):
         payload: data_binding.JSONObject,
     ) -> user_events.UserUpdateEvent:
         ...
+
+    def deserialize_presence_update_event(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> user_events.PresenceUpdateEvent:
+        ...

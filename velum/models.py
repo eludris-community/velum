@@ -326,3 +326,14 @@ class User:
 
     This is only available when getting the data of the currently authenticated user.
     """
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class PresenceUpdate:
+    """Represents a presence update."""
+
+    user_id: int
+    """The id of the user."""
+
+    status: Status
+    """The status of the user."""
