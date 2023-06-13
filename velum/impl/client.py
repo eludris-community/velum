@@ -55,6 +55,8 @@ class GatewayClient(traits.GatewayClientAware):
         event_manager_impl: typing.Optional[event_manager_trait.EventManager] = None,
         gateway_impl: typing.Optional[gateway_trait.GatewayHandler] = None,
         rest_client_impl: typing.Optional[rest_trait.RESTClient] = None,
+        *,
+        token: str,
     ):
         self._entity_factory = (
             entity_factory_impl
@@ -79,6 +81,7 @@ class GatewayClient(traits.GatewayClientAware):
             else rest.RESTClient(
                 rest_url=rest_url,
                 cdn_url=cdn_url,
+                token=token,
                 entity_factory=self._entity_factory,
             )
         )
@@ -87,7 +90,9 @@ class GatewayClient(traits.GatewayClientAware):
         self._gateway = (
             gateway_impl
             if gateway_impl is not None
-            else gateway.GatewayHandler(gateway_url=gateway_url, event_manager=self._event_manager)
+            else gateway.GatewayHandler(
+                gateway_url=gateway_url, event_manager=self._event_manager, token=token
+            )
         )
 
         # Setup state.

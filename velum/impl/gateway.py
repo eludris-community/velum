@@ -187,6 +187,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         "_connection_event",
         "_authenticated_event",
         "_gateway_url",
+        "_token",
         "_gateway_ws",
         "_heartbeat_latency",
         "_is_closing",
@@ -209,13 +210,13 @@ class GatewayHandler(gateway_trait.GatewayHandler):
     _logger: logging.Logger
     _started_at: float
     _user: typing.Optional[models.User]
-    _started_at: float
 
     def __init__(
         self,
         *,
         gateway_url: typing.Optional[str] = None,
         event_manager: event_manager_trait.EventManager,
+        token: str,
     ):
         self._event_manager = event_manager
 
@@ -224,6 +225,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         self._connection_event = None
         self._authenticated_event = asyncio.Event()
         self._gateway_url = gateway_url or _GATEWAY_URL
+        self._token = token
         self._gateway_ws = None
         self._heartbeat_latency = float("nan")
         self._keep_alive_task = None

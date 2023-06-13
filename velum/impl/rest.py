@@ -11,6 +11,7 @@ from velum import models
 from velum import routes
 from velum.api import entity_factory_trait
 from velum.api import rest_trait
+from velum.impl import entity_factory as entity_factory_impl
 from velum.internal import data_binding
 
 __all__: typing.Sequence[str] = ("RESTClient",)
@@ -25,6 +26,7 @@ class RESTClient(rest_trait.RESTClient):
     __slots__ = (
         "_entity_factory",
         "_routes",
+        "_token",
         "_session",
     )
 
@@ -35,13 +37,17 @@ class RESTClient(rest_trait.RESTClient):
         *,
         cdn_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
-        entity_factory: entity_factory_trait.EntityFactory,
+        token: typing.Optional[str] = None,
+        entity_factory: typing.Optional[entity_factory_trait.EntityFactory] = None,
     ):
-        self._entity_factory = entity_factory
+        self._entity_factory = (
+            entity_factory if entity_factory is not None else entity_factory_impl.EntityFactory()
+        )
         self._routes = {
             routes.OPRISH: rest_url or _REST_URL,
             routes.EFFIS: cdn_url or _CDN_URL,
         }
+        self._token = token
         self._session = None
 
     @property
@@ -88,11 +94,21 @@ class RESTClient(rest_trait.RESTClient):
         self,
         route: routes.CompiledRoute,
         *,
-        query: typing.Optional[typing.Any] = None,
         json: typing.Optional[typing.Any] = None,
         form_builder: typing.Optional[data_binding.FormBuilder] = None,
     ):
         url = self._complete_route(route)
+        headers: typing.Dict[str, str] = {}
+
+        if route.requires_authentication is not None:
+            # Does not require authentication, but is preferred (higher rate limit).
+            if not route.requires_authentication and self._token is not None:
+                headers["Authorization"] = self._token
+            elif route.requires_authentication:
+                if self._token is None:
+                    raise errors.HTTPError("Cannot use an authenticated route without a token.")
+
+                headers["Authorization"] = self._token
 
         stack = contextlib.AsyncExitStack()
         async with stack:
@@ -104,6 +120,7 @@ class RESTClient(rest_trait.RESTClient):
                 params=query,
                 json=json,
                 data=form,
+                headers=headers,
             )
 
         if 200 <= response.status < 300:
