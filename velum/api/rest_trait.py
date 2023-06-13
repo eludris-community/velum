@@ -98,3 +98,48 @@ class RESTClient(typing.Protocol):
 
     async def get_sessions(self) -> typing.Sequence[models.Session]:
         ...
+
+    # Users
+
+    async def create_user(
+        self,
+        *,
+        username: str,
+        email: str,
+        password: str,
+    ) -> models.User:
+        ...
+
+    async def delete_user(self, password: str) -> None:
+        ...
+
+    async def get_self(self) -> models.User:
+        ...
+
+    async def get_user(self, identifier: typing.Union[int, str], /) -> models.User:
+        ...
+
+    async def update_profile(
+        self,
+        *,
+        display_name: typing.Optional[str] = None,
+        status: typing.Optional[str] = None,
+        status_type: typing.Optional[models.StatusType] = None,
+        bio: typing.Optional[str] = None,
+        avatar: typing.Optional[int] = None,
+        banner: typing.Optional[int] = None,
+    ) -> models.User:
+        ...
+
+    async def update_user(
+        self,
+        *,
+        password: str,
+        username: typing.Optional[str] = None,
+        email: typing.Optional[str] = None,
+        new_password: typing.Optional[str] = None,
+    ) -> models.User:
+        ...
+
+    async def verify_user(self, *, code: int) -> None:
+        ...

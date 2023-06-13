@@ -19,6 +19,13 @@ __all__: typing.Sequence[str] = (
     "CREATE_SESSION",
     "DELETE_SESSION",
     "GET_SESSIONS",
+    "CREATE_USER",
+    "DELETE_USER",
+    "GET_SELF",
+    "GET_USER",
+    "UPDATE_PROFILE",
+    "UPDATE_USER",
+    "VERIFY_USER",
 )
 
 
@@ -96,3 +103,13 @@ CREATE_MESSAGE = Route(POST, OPRISH, "/messages", True)
 CREATE_SESSION = Route(POST, OPRISH, "/sessions")
 DELETE_SESSION = Route(DELETE, OPRISH, "/sessions/{id}", True)
 GET_SESSIONS = Route(GET, OPRISH, "/sessions", True)
+
+# Users.
+
+CREATE_USER = Route(POST, OPRISH, "/users")
+DELETE_USER = Route(DELETE, OPRISH, "/users", True)
+GET_SELF = Route(GET, OPRISH, "/users/@me", True)
+GET_USER = Route(GET, OPRISH, "/users/{identifier}", False)
+UPDATE_PROFILE = Route(PATCH, OPRISH, "/users/profile", True)
+UPDATE_USER = Route(PATCH, OPRISH, "/users", True)
+VERIFY_USER = Route(POST, OPRISH, "/users/verify", True)

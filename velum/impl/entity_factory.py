@@ -196,6 +196,41 @@ class EntityFactory(entity_factory_trait.EntityFactory):
             ip=ipaddress.ip_address(ip),
         )
 
+    def _deserialize_status(self, payload: data_binding.JSONObject) -> models.Status:
+        type = typing.cast(str, payload["type"])
+        text = typing.cast(typing.Optional[str], payload.get("text"))
+
+        return models.Status(type=models.StatusType(type), text=text)
+
+    def deserialize_user(self, payload: data_binding.JSONObject) -> models.User:
+        id = typing.cast(int, payload["id"])
+        username = typing.cast(str, payload["username"])
+        display_name = typing.cast(typing.Optional[str], payload.get("display_name"))
+        social_credit = typing.cast(int, payload["social_credit"])
+        status = self._deserialize_status(typing.cast(data_binding.JSONObject, payload["status"]))
+        bio = typing.cast(typing.Optional[str], payload.get("bio"))
+        avatar = typing.cast(typing.Optional[int], payload.get("avatar"))
+        banner = typing.cast(typing.Optional[int], payload.get("banner"))
+        badges = typing.cast(int, payload["badges"])
+        permissions = typing.cast(int, payload["permissions"])
+        email = typing.cast(typing.Optional[str], payload.get("email"))
+        verified = typing.cast(typing.Optional[bool], payload.get("verified"))
+
+        return models.User(
+            id=id,
+            username=username,
+            display_name=display_name,
+            social_credit=social_credit,
+            status=status,
+            bio=bio,
+            avatar=avatar,
+            banner=banner,
+            badges=badges,
+            permissions=permissions,
+            email=email,
+            verified=verified,
+        )
+
     def deserialize_authenticated(self, payload: data_binding.JSONObject) -> models.Authenticated:
         user = self.deserialize_user(typing.cast(data_binding.JSONObject, payload["user"]))
         users = typing.cast(typing.List[models.User], payload["users"])

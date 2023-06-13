@@ -231,3 +231,75 @@ class RESTClient(rest_trait.RESTClient):
             )
             for session in response
         ]
+
+    # Users
+
+    async def create_user(
+        self,
+        *,
+        username: str,
+        email: str,
+        password: str,
+    ) -> models.User:
+        body = {"username": username, "email": email, "password": password}
+        response = await self._request(routes.CREATE_USER.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def delete_user(self, password: str) -> None:
+        body = {"password": password}
+        await self._request(routes.DELETE_USER.compile(), json=body)
+
+    async def get_self(self) -> models.User:
+        response = await self._request(routes.GET_SELF.compile())
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def get_user(self, identifier: typing.Union[int, str], /) -> models.User:
+        response = await self._request(routes.GET_USER.compile(identifier=identifier))
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def update_profile(
+        self,
+        *,
+        display_name: typing.Optional[str] = None,
+        status: typing.Optional[str] = None,
+        status_type: typing.Optional[models.StatusType] = None,
+        bio: typing.Optional[str] = None,
+        avatar: typing.Optional[int] = None,
+        banner: typing.Optional[int] = None,
+    ) -> models.User:
+        body = {
+            "display_name": display_name,
+            "status": status,
+            "status_type": status_type,
+            "bio": bio,
+            "avatar": avatar,
+            "banner": banner,
+        }
+        response = await self._request(routes.UPDATE_PROFILE.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def update_user(
+        self,
+        *,
+        password: str,
+        username: typing.Optional[str] = None,
+        email: typing.Optional[str] = None,
+        new_password: typing.Optional[str] = None,
+    ) -> models.User:
+        body = {
+            "password": password,
+            "username": username,
+            "email": email,
+            "new_password": new_password,
+        }
+        response = await self._request(routes.UPDATE_USER.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def verify_user(self, *, code: int) -> None:
+        query = {"code": str(code)}
+        await self._request(routes.VERIFY_USER.compile(), query=query)

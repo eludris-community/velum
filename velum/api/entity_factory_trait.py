@@ -36,6 +36,9 @@ class EntityFactory(typing.Protocol):
     def deserialize_session(self, payload: data_binding.JSONObject) -> models.Session:
         ...
 
+    def deserialize_user(self, payload: data_binding.JSONObject) -> models.User:
+        ...
+
     def deserialize_authenticated(self, payload: data_binding.JSONObject) -> models.Authenticated:
         ...
 
