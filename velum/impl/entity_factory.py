@@ -12,7 +12,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
 
     def deserialize_message(self, payload: data_binding.JSONObject) -> models.Message:
         content = typing.cast(str, payload["content"])
-        author = typing.cast(str, payload["author"])
+        author = self.deserialize_user(typing.cast(data_binding.JSONObject, payload["author"]))
 
         return models.Message(content=content, author=author)
 

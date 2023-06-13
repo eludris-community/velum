@@ -21,7 +21,7 @@ class MessageCreateEvent(MessageEvent):
     message: models.Message = attr.field()
 
     @property
-    def author(self) -> str:
+    def author(self) -> models.User:
         return self.message.author
 
     @property
