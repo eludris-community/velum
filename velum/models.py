@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import typing
 
 import attr
@@ -7,6 +8,7 @@ import attr
 __all__: typing.Sequence[str] = (
     "Message",
     "InstanceInfo",
+    "Session",
 )
 
 
@@ -215,3 +217,23 @@ class InstanceInfo:
 
     rate_limits: typing.Optional[InstanceRatelimits] = attr.field()
     """The ratelimits that apply to the connected Eludris instance."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class Session:
+    """Represents an authenticated session with an Eludris instance."""
+
+    id: int
+    """The id of the session."""
+
+    user_id: int
+    """The id of the user that owns the session."""
+
+    platform: str
+    """The platform the session was created on."""
+
+    client: str
+    """The client the session was created by."""
+
+    ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+    """The IP address the session was created from."""
