@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ipaddress
 import typing
+from enum import Enum
 
 import attr
 
@@ -9,6 +10,8 @@ __all__: typing.Sequence[str] = (
     "Message",
     "InstanceInfo",
     "Session",
+    "StatusType",
+    "Status",
 )
 
 
@@ -237,3 +240,30 @@ class Session:
 
     ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
     """The IP address the session was created from."""
+
+
+class StatusType(Enum):
+    """Represents the type of a status."""
+
+    ONLINE = "ONLINE"
+    """The user is online."""
+
+    OFFLINE = "OFFLINE"
+    """The user is offline."""
+
+    IDLE = "IDLE"
+    """The user is idle."""
+
+    BUSY = "BUSY"
+    """The user is busy."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class Status:
+    """Represents the status of a user."""
+
+    type: StatusType = attr.field()
+    """The type of the status."""
+
+    text: typing.Optional[str] = attr.field()
+    """The text of the status."""
