@@ -1,5 +1,7 @@
 import typing
 
+from velum import models
+
 __all__: typing.Sequence[str] = ("GatewayHandler",)
 
 
@@ -9,6 +11,10 @@ class GatewayHandler(typing.Protocol):
 
     @property
     def is_alive(self) -> bool:
+        ...
+
+    @property
+    def user(self) -> models.User:
         ...
 
     async def start(self) -> None:

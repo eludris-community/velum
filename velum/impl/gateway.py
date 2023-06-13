@@ -11,6 +11,8 @@ import typing
 import aiohttp
 
 from velum import errors
+from velum import events
+from velum import models
 from velum.api import event_manager_trait
 from velum.api import gateway_trait
 from velum.api import rate_limit_trait
@@ -44,6 +46,7 @@ _D: typing.Final[str] = sys.intern("d")
 _PONG: typing.Final[str] = sys.intern("PONG")
 _PING: typing.Final[str] = sys.intern("PING")
 _HELLO: typing.Final[str] = sys.intern("HELLO")
+_AUTHENTICATE: typing.Final[str] = sys.intern("AUTHENTICATE")
 
 
 class GatewayWebsocket:
@@ -180,8 +183,9 @@ class GatewayWebsocket:
 
 class GatewayHandler(gateway_trait.GatewayHandler):
     __slots__ = (
-        "_connection_event",
         "_event_manager",
+        "_connection_event",
+        "_authenticated_event",
         "_gateway_url",
         "_gateway_ws",
         "_heartbeat_latency",
@@ -191,9 +195,11 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         "_last_heartbeat_ack",
         "_logger",
         "_started_at",
+        "_user",
     )
 
     _connection_event: typing.Optional[asyncio.Event]
+    _authenticated_event: asyncio.Event
     _event_manager: event_manager_trait.EventManager
     _gateway_ws: typing.Optional[GatewayWebsocket]
     _heartbeat_latency: float
@@ -201,6 +207,8 @@ class GatewayHandler(gateway_trait.GatewayHandler):
     _last_heartbeat: float
     _last_heartbeat_ack: float
     _logger: logging.Logger
+    _started_at: float
+    _user: typing.Optional[models.User]
     _started_at: float
 
     def __init__(
@@ -211,7 +219,10 @@ class GatewayHandler(gateway_trait.GatewayHandler):
     ):
         self._event_manager = event_manager
 
+        event_manager.subscribe(events.AuthenticatedEvent, self._handle_authenticated)
+
         self._connection_event = None
+        self._authenticated_event = asyncio.Event()
         self._gateway_url = gateway_url or _GATEWAY_URL
         self._gateway_ws = None
         self._heartbeat_latency = float("nan")
@@ -221,10 +232,18 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         self._last_heartbeat_ack = float("nan")
         self._logger = logging.getLogger("velum.gateway")
         self._started_at = float("-inf")
+        self._user = None
 
     @property
     def is_alive(self) -> bool:
         return self._keep_alive_task is not None
+
+    @property
+    def user(self) -> models.User:
+        if self._user is None:
+            raise RuntimeError("Cannot access user before authentication.")
+
+        return self._user
 
     async def start(self) -> None:
         if self._connection_event:
@@ -266,6 +285,10 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         self._keep_alive_task = None
         self._is_closing = False
         self._logger.info("Gateway connection closed successfully.")
+
+    async def _handle_authenticated(self, event: events.AuthenticatedEvent) -> None:
+        self._user = event.user
+        self._authenticated_event.set()
 
     async def _poll_hello_event(self) -> float:
         assert self._gateway_ws is not None
@@ -371,8 +394,17 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         heartbeat_interval = await self._poll_hello_event()
 
+        await self._gateway_ws.send_json({_OP: _AUTHENTICATE, _D: self._token})
+
         heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_interval), name="heartbeat")
         poll_events_task = asyncio.create_task(self._poll_events(), name="poll events")
+
+        try:
+            await asyncio.wait_for(self._authenticated_event.wait(), timeout=10.0)
+        except asyncio.TimeoutError:
+            raise errors.GatewayConnectionError(
+                "Failed to authenticate with the gateway."
+            ) from None
 
         # Indicate connection logic is done.
         self._connection_event.set()

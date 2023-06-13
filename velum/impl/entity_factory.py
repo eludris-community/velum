@@ -171,3 +171,9 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         wait = typing.cast(int, payload["wait"])
 
         return models.RatelimitData(wait=wait)
+
+    def deserialize_authenticated(self, payload: data_binding.JSONObject) -> models.Authenticated:
+        user = self.deserialize_user(typing.cast(data_binding.JSONObject, payload["user"]))
+        users = typing.cast(typing.List[models.User], payload["users"])
+
+        return models.Authenticated(user=user, users=users)

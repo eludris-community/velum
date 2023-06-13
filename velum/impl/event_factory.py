@@ -42,3 +42,12 @@ class EventFactory(event_factory_trait.EventFactory):
         return message_events.MessageCreateEvent(
             message=self._entity_factory.deserialize_message(payload)
         )
+
+    def deserialize_authenticated_event(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> connection_events.AuthenticatedEvent:
+        return connection_events.AuthenticatedEvent(
+            data=self._entity_factory.deserialize_authenticated(payload)
+        )

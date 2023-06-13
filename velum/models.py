@@ -45,6 +45,17 @@ class Hello:
 
 
 @attr.define(kw_only=True, weakref_slot=False)
+class Authenticated:
+    """Represents the payload sent by the gateway upon authentication."""
+
+    user: User
+    """The currently authenticated user."""
+
+    users: typing.Sequence[User]
+    """The online users relevant to the authenticated user."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
 class Message:
     """Represents a message on Eludris."""
 

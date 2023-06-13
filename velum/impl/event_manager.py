@@ -46,3 +46,13 @@ class EventManager(event_manager_base.EventManagerBase):
         await self.dispatch(
             self._event_factory.deserialize_ratelimit_event(gateway_connection, payload)
         )
+
+    @event_manager_base.is_consumer_for(connection_events.AuthenticatedEvent)
+    async def on_authenticated(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> None:
+        await self.dispatch(
+            self._event_factory.deserialize_authenticated_event(gateway_connection, payload)
+        )

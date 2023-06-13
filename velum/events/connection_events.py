@@ -10,6 +10,7 @@ __all__: typing.Sequence[str] = (
     "DisconnectEvent",
     "HelloEvent",
     "RatelimitEvent",
+    "AuthenticatedEvent",
 )
 
 
@@ -63,3 +64,22 @@ class RatelimitEvent(base_events.Event):
         """The number of milliseconds to wait for the rate-limit to wear off."""
 
         return self.data.wait
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class AuthenticatedEvent(base_events.Event):
+    """Event fired when the client is authenticated."""
+
+    data: models.Authenticated = attr.field()
+
+    @property
+    def user(self) -> models.User:
+        """The currently authenticated user."""
+
+        return self.data.user
+
+    @property
+    def users(self) -> typing.Sequence[models.User]:
+        """The online users relevant to the authenticated user."""
+
+        return self.data.users

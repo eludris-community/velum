@@ -32,3 +32,10 @@ class EventFactory(typing.Protocol):
         payload: data_binding.JSONObject,
     ) -> connection_events.RatelimitEvent:
         ...
+
+    def deserialize_authenticated_event(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> connection_events.AuthenticatedEvent:
+        ...
