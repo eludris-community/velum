@@ -7,6 +7,7 @@ from velum.api import event_factory_trait
 from velum.api import gateway_trait
 from velum.events import connection_events
 from velum.events import message_events
+from velum.events import user_events
 from velum.internal import data_binding
 
 __all__: typing.Sequence[str] = ("EventFactory",)
@@ -51,3 +52,10 @@ class EventFactory(event_factory_trait.EventFactory):
         return connection_events.AuthenticatedEvent(
             data=self._entity_factory.deserialize_authenticated(payload)
         )
+
+    def deserialize_user_update_event(
+        self,
+        gateway_connection: gateway_trait.GatewayHandler,
+        payload: data_binding.JSONObject,
+    ) -> user_events.UserUpdateEvent:
+        return user_events.UserUpdateEvent(user=self._entity_factory.deserialize_user(payload))
