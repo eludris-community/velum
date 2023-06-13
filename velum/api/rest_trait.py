@@ -85,3 +85,16 @@ class RESTClient(typing.Protocol):
 
     async def send_message(self, content: str) -> models.Message:
         ...
+
+    # Sessions
+
+    async def create_session(
+        self, *, identifier: str, password: str, platform: str = ..., client: str = ...
+    ) -> typing.Tuple[str, models.Session]:
+        ...
+
+    async def delete_session(self, *, id: int) -> None:
+        ...
+
+    async def get_sessions(self) -> typing.Sequence[models.Session]:
+        ...

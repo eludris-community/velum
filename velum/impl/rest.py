@@ -203,3 +203,31 @@ class RESTClient(rest_trait.RESTClient):
         response = await self._request(routes.CREATE_MESSAGE.compile(), json=body)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
+
+    # Sessions
+
+    async def create_session(
+        self, *, identifier: str, password: str, platform: str = "python", client: str = "velum"
+    ) -> typing.Tuple[str, models.Session]:
+        body = {
+            "identifier": identifier,
+            "password": password,
+            "platform": platform,
+            "client": client,
+        }
+        response = await self._request(routes.CREATE_SESSION.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_session_created(response)
+
+    async def delete_session(self, *, id: int) -> None:
+        await self._request(routes.DELETE_SESSION.compile(id=id))
+
+    async def get_sessions(self) -> typing.Sequence[models.Session]:
+        response = await self._request(routes.GET_SESSIONS.compile())
+        assert isinstance(response, list)
+        return [
+            self._entity_factory.deserialize_session(
+                typing.cast(typing.Dict[str, typing.Any], session)
+            )
+            for session in response
+        ]

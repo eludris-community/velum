@@ -16,6 +16,9 @@ __all__: typing.Sequence[str] = (
     "DELETE",
     "GET_INFO",
     "CREATE_MESSAGE",
+    "CREATE_SESSION",
+    "DELETE_SESSION",
+    "GET_SESSIONS",
 )
 
 
@@ -87,3 +90,9 @@ GET_INFO = Route(GET, OPRISH, "/")
 # Messaging.
 
 CREATE_MESSAGE = Route(POST, OPRISH, "/messages", True)
+
+# Sessions.
+
+CREATE_SESSION = Route(POST, OPRISH, "/sessions")
+DELETE_SESSION = Route(DELETE, OPRISH, "/sessions/{id}", True)
+GET_SESSIONS = Route(GET, OPRISH, "/sessions", True)

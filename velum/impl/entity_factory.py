@@ -1,3 +1,4 @@
+import ipaddress
 import typing
 
 from velum import models
@@ -171,6 +172,29 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         wait = typing.cast(int, payload["wait"])
 
         return models.RatelimitData(wait=wait)
+
+    def deserialize_session_created(
+        self, payload: data_binding.JSONObject
+    ) -> typing.Tuple[str, models.Session]:
+        token = typing.cast(str, payload["token"])
+        session = self.deserialize_session(typing.cast(data_binding.JSONObject, payload["session"]))
+
+        return token, session
+
+    def deserialize_session(self, payload: data_binding.JSONObject) -> models.Session:
+        id = typing.cast(int, payload["id"])
+        user_id = typing.cast(int, payload["user_id"])
+        platform = typing.cast(str, payload["platform"])
+        client = typing.cast(str, payload["client"])
+        ip = typing.cast(str, payload["ip"])
+
+        return models.Session(
+            id=id,
+            user_id=user_id,
+            platform=platform,
+            client=client,
+            ip=ipaddress.ip_address(ip),
+        )
 
     def deserialize_authenticated(self, payload: data_binding.JSONObject) -> models.Authenticated:
         user = self.deserialize_user(typing.cast(data_binding.JSONObject, payload["user"]))
