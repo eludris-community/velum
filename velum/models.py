@@ -48,7 +48,7 @@ class Hello:
 class Message:
     """Represents a message on Eludris."""
 
-    author: str = attr.field()
+    author: User = attr.field()
     """The author of the message."""
 
     content: str = attr.field()
