@@ -12,6 +12,7 @@ __all__: typing.Sequence[str] = (
     "Session",
     "StatusType",
     "Status",
+    "User",
 )
 
 
@@ -267,3 +268,50 @@ class Status:
 
     text: typing.Optional[str] = attr.field()
     """The text of the status."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class User:
+    """Represents a user on an Eludris instance."""
+
+    id: int
+    """The id of the user."""
+
+    username: str
+    """The username of the user."""
+
+    display_name: typing.Optional[str] = attr.field(default=None)
+    """The display name of the user."""
+
+    social_credit: int
+    """The social credit of the user."""
+
+    status: Status
+    """The status of the user."""
+
+    bio: typing.Optional[str] = attr.field(default=None)
+    """The bio of the user."""
+
+    avatar: typing.Optional[int] = attr.field(default=None)
+    """The avatar of the user."""
+
+    banner: typing.Optional[int] = attr.field(default=None)
+    """The banner of the user."""
+
+    badges: int
+    """The badges of the user."""
+
+    permissions: int
+    """The permissions of the user."""
+
+    email: typing.Optional[str] = attr.field(default=None)
+    """The email of the user.
+
+    This is only available when getting the data of the currently authenticated user.
+    """
+
+    verified: typing.Optional[bool] = attr.field(default=None)
+    """Whether or not the user is verified.
+
+    This is only available when getting the data of the currently authenticated user.
+    """
