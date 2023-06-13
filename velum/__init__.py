@@ -18,6 +18,7 @@ from velum.events.connection_events import *
 from velum.events.message_events import *
 from velum.files import *
 from velum.impl.client import GatewayClient as GatewayClient
+from velum.impl.rest import RESTClient as RESTClient
 from velum.internal.data_binding import JSONImpl as JSONImpl
 from velum.internal.data_binding import set_json_impl as set_json_impl
-from velum.models import Message as Message
+from velum.models import *
