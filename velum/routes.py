@@ -20,7 +20,6 @@ __all__: typing.Sequence[str] = (
 
 @attr.define(hash=True, weakref_slot=False)
 class Route:
-
     method: str = attr.field()
 
     destination: str = attr.field()
@@ -36,7 +35,6 @@ class Route:
 
 @attr.define(hash=True, weakref_slot=False)
 class CompiledRoute:
-
     route: Route = attr.field()
 
     compiled_path: str = attr.field()

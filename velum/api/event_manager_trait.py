@@ -13,7 +13,6 @@ EventPredicateT = typing.Callable[[base_events.EventT], bool]
 
 @typing.runtime_checkable
 class EventManager(typing.Protocol):
-
     __slots__: typing.Sequence[str] = ()
 
     def consume_raw_event(

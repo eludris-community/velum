@@ -62,7 +62,6 @@ Event._Event__bitmask = 1 << 0  # pyright: ignore[reportGeneralTypeIssues]
 
 @attr.define(kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[EventT]):
-
     exception: Exception = attr.field()
 
     failed_event: EventT = attr.field()

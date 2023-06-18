@@ -5,7 +5,6 @@ __all__: typing.Sequence[str] = ("GatewayHandler",)
 
 @typing.runtime_checkable
 class GatewayHandler(typing.Protocol):
-
     __slots__: typing.Sequence[str] = ()
 
     @property

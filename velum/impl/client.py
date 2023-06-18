@@ -29,7 +29,6 @@ _LOGGER = logging.getLogger("velum.client")
 
 
 class GatewayClient(traits.GatewayClientAware):
-
     __slots__: typing.Sequence[str] = (
         "_entity_factory",
         "_event_factory",

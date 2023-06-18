@@ -8,7 +8,6 @@ _ClsT = typing.TypeVar("_ClsT")
 
 
 class classproperty(typing.Generic[_ClsT, _T]):
-
     __slots__: typing.Sequence[str] = ("callback",)
 
     callback: "classmethod[_ClsT, ..., _T]"

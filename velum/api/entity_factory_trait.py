@@ -8,7 +8,6 @@ __all__: typing.Sequence[str] = ("EntityFactory",)
 
 @typing.runtime_checkable
 class EntityFactory(typing.Protocol):
-
     __slots__: typing.Sequence[str] = ()
 
     def deserialize_message(self, payload: data_binding.JSONObject) -> models.Message:

@@ -12,7 +12,6 @@ __all__: typing.Sequence[str] = ("RESTClient",)
 
 @typing.runtime_checkable
 class RESTClient(typing.Protocol):
-
     __slots__: typing.Sequence[str] = ()
 
     @property

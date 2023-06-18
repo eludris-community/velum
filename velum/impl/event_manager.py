@@ -11,7 +11,6 @@ __all__: typing.Sequence[str] = ("EventManager",)
 
 
 class EventManager(event_manager_base.EventManagerBase):
-
     __slots__ = ("_event_factory",)
 
     def __init__(self, event_factory: event_factory_trait.EventFactory):

@@ -132,7 +132,6 @@ def is_consumer_for(
 
 @attr.define(weakref_slot=False)
 class _BoundConsumer(typing.Generic[_EventManagerT]):
-
     event_manager: event_manager_trait.EventManager = attr.field()
 
     consumer: Consumer[_EventManagerT] = attr.field()
@@ -174,7 +173,6 @@ class _BoundConsumer(typing.Generic[_EventManagerT]):
 
 
 class EventManagerBase(event_manager_trait.EventManager):
-
     __slots__ = ("_consumers", "_listeners", "_waiters")
 
     _consumers: typing.Dict[str, _BoundConsumer[typing_extensions.Self]]
