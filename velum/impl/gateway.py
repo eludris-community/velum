@@ -183,11 +183,10 @@ class GatewayWebsocket:
 
 class GatewayHandler(gateway_trait.GatewayHandler):
     __slots__ = (
-        "_event_manager",
-        "_connection_event",
         "_authenticated_event",
+        "_connection_event",
+        "_event_manager",
         "_gateway_url",
-        "_token",
         "_gateway_ws",
         "_heartbeat_latency",
         "_is_closing",
@@ -196,6 +195,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         "_last_heartbeat_ack",
         "_logger",
         "_started_at",
+        "_token",
         "_user",
     )
 
