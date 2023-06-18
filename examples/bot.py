@@ -22,7 +22,6 @@ VELUM_URL = "https://github.com/Chromosomologist/velum"
 # `url` is optional, and should be set to `https://api.eludris.gay/next` if you want to
 # use the above instance, but with the `next` branch as users is not in main yet.
 
-__import__("logging").getLogger("velum").setLevel("DEBUG")
 bot = velum.GatewayClient(
     token=os.environ["TOKEN"],
     rest_url="https://api.eludris.gay/next",
