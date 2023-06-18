@@ -226,9 +226,7 @@ class RESTClient(rest_trait.RESTClient):
         response = await self._request(routes.GET_SESSIONS.compile())
         assert isinstance(response, list)
         return [
-            self._entity_factory.deserialize_session(
-                typing.cast(typing.Dict[str, typing.Any], session)
-            )
+            self._entity_factory.deserialize_session(typing.cast(data_binding.JSONObject, session))
             for session in response
         ]
 
