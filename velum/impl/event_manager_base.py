@@ -9,12 +9,12 @@ import typing
 import attr
 import typing_extensions
 
+from velum.api import event_manager_trait
+from velum.api import gateway_trait
 from velum.events import base_events
 from velum.internal import async_utils
 from velum.internal import class_utils
 from velum.internal import data_binding
-from velum.traits import event_manager_trait
-from velum.traits import gateway_trait
 
 __all__: typing.Sequence[str] = (
     "UnboundConsumerCallback",
@@ -132,7 +132,6 @@ def is_consumer_for(
 
 @attr.define(weakref_slot=False)
 class _BoundConsumer(typing.Generic[_EventManagerT]):
-
     event_manager: event_manager_trait.EventManager = attr.field()
 
     consumer: Consumer[_EventManagerT] = attr.field()
@@ -174,7 +173,6 @@ class _BoundConsumer(typing.Generic[_EventManagerT]):
 
 
 class EventManagerBase(event_manager_trait.EventManager):
-
     __slots__ = ("_consumers", "_listeners", "_waiters")
 
     _consumers: typing.Dict[str, _BoundConsumer[typing_extensions.Self]]
@@ -278,7 +276,12 @@ class EventManagerBase(event_manager_trait.EventManager):
         gateway_connection: gateway_trait.GatewayHandler,
         payload: data_binding.JSONObject,
     ) -> None:
-        consumer = self._consumers[event_name.lower()]
+        consumer = self._consumers.get(event_name.lower())
+
+        if not consumer:
+            _LOGGER.warning("Unhandled event: %r", event_name.lower())
+            return
+
         asyncio.create_task(
             self._handle_consumption(consumer, gateway_connection, payload),
             name=f"dispatch {event_name}",
@@ -438,7 +441,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         try:
             waiter_set = self._waiters[event_type]
         except KeyError:
-            self._waiters[event_type] = waiter_set = set()
+            waiter_set = self._waiters[event_type] = set()
             self._increment_waiter_group_count(event_type, 1)
 
         pair = (predicate, future)

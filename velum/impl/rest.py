@@ -9,9 +9,9 @@ from velum import errors
 from velum import files
 from velum import models
 from velum import routes
+from velum.api import entity_factory_trait
+from velum.api import rest_trait
 from velum.internal import data_binding
-from velum.traits import entity_factory_trait
-from velum.traits import rest_trait
 
 __all__: typing.Sequence[str] = ("RESTClient",)
 
@@ -22,7 +22,6 @@ _APPLICATION_JSON: typing.Final[str] = "application/json"
 
 
 class RESTClient(rest_trait.RESTClient):
-
     __slots__ = (
         "_entity_factory",
         "_routes",
@@ -155,15 +154,11 @@ class RESTClient(rest_trait.RESTClient):
 
         await self._request(routes.POST_MESSAGE.compile(), json=body)
 
-    async def get_instance_info(self) -> models.InstanceInfo:
-        response = await self._request(routes.GET_INFO.compile())
+    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+        query = {"ratelimits": "1"} if rate_limits else None
+        response = await self._request(routes.GET_INFO.compile(), query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_instance_info(response)
-
-    async def get_ratelimits(self) -> models.InstanceRatelimits:
-        response = await self._request(routes.GET_RATELIMITS.compile())
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_ratelimits(response)
 
     # Effis.
 

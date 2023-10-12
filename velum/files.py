@@ -333,7 +333,6 @@ class WebReader(AsyncReader):
 @attr.define(weakref_slot=False)
 @typing.final
 class _WebReader(AsyncReaderContextManager[WebReader]):
-
     _web_resource: URL = attr.field()
     _head_only: bool = attr.field()
     _exit_stack: typing.Optional[contextlib.AsyncExitStack] = None

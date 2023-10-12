@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import random
 import sys
 import time
 import typing
@@ -10,13 +11,13 @@ import typing
 import aiohttp
 
 from velum import errors
+from velum.api import event_manager_trait
+from velum.api import gateway_trait
+from velum.api import rate_limit_trait
 from velum.events import connection_events
 from velum.impl import rate_limits
 from velum.internal import async_utils
 from velum.internal import data_binding
-from velum.traits import event_manager_trait
-from velum.traits import gateway_trait
-from velum.traits import rate_limit_trait
 
 __all__: typing.Sequence[str] = ("GatewayHandler",)
 
@@ -34,7 +35,6 @@ if typing.TYPE_CHECKING:
 
 _BACKOFF_WINDOW: typing.Final[float] = 15.0
 _GATEWAY_URL: typing.Final[str] = "wss://ws.eludris.gay"
-_HEARTBEAT_INTERVAL: typing.Final[float] = 45.0
 
 # Payload attributes.
 _OP: typing.Final[str] = sys.intern("op")
@@ -43,10 +43,10 @@ _D: typing.Final[str] = sys.intern("d")
 # Special opcodes.
 _PONG: typing.Final[str] = sys.intern("PONG")
 _PING: typing.Final[str] = sys.intern("PING")
+_HELLO: typing.Final[str] = sys.intern("HELLO")
 
 
 class GatewayWebsocket:
-
     __slots__ = (
         "_gateway_url",
         "_logger",
@@ -179,7 +179,6 @@ class GatewayWebsocket:
 
 
 class GatewayHandler(gateway_trait.GatewayHandler):
-
     __slots__ = (
         "_connection_event",
         "_event_manager",
@@ -268,6 +267,27 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         self._is_closing = False
         self._logger.info("Gateway connection closed successfully.")
 
+    async def _poll_hello_event(self) -> float:
+        assert self._gateway_ws is not None
+        assert self._connection_event is not None
+
+        payload = await self._gateway_ws.receive_json()
+        op = payload[_OP]
+
+        if op != _HELLO:
+            self._logger.debug(
+                "Expected %r opcode, received %r. Closing connection.",
+                _HELLO,
+                op,
+            )
+            # TODO: Custom exception and don't use magic number.
+            await self._gateway_ws.send_close(code=1002, message=b"Expected HELLO op.")
+            raise RuntimeError(f"Expected opcode {_HELLO}, received {op} instead.")
+
+        # TODO: Maybe return fully deserialised event and use ratelimit info.
+        #       For now, only using the heartbeat interval will do.
+        return float(payload[_D]["heartbeat_interval"]) / 1_000.0
+
     async def _poll_events(self) -> None:
         assert self._gateway_ws is not None
         assert self._connection_event is not None
@@ -349,7 +369,9 @@ class GatewayHandler(gateway_trait.GatewayHandler):
             logger=self._logger, url=self._gateway_url
         )
 
-        heartbeat_task = asyncio.create_task(self._heartbeat(), name="heartbeat")
+        heartbeat_interval = await self._poll_hello_event()
+
+        heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_interval), name="heartbeat")
         poll_events_task = asyncio.create_task(self._poll_events(), name="poll events")
 
         # Indicate connection logic is done.
@@ -366,14 +388,20 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         self._last_heartbeat = time.monotonic()
 
-    async def _heartbeat(self) -> None:
+    async def _heartbeat(self, heartbeat_interval: float) -> None:
         assert self._gateway_ws is not None
 
+        jitter = random.random() * heartbeat_interval
         self._last_heartbeat_ack = time.monotonic()
-        self._logger.debug("Starting heartbeat with interval %s [s].", _HEARTBEAT_INTERVAL)
+        self._logger.debug(
+            "Waiting %.2f [s] before starting heartbeat with interval %.2f [s].",
+            jitter,
+            heartbeat_interval,
+        )
+
+        await asyncio.sleep(jitter)
 
         while True:
-
             if self._last_heartbeat_ack <= self._last_heartbeat:
                 self._logger.error(
                     "Heartbeat was not acknowledged for approximately %.2f [s], "
@@ -383,4 +411,4 @@ class GatewayHandler(gateway_trait.GatewayHandler):
                 return
 
             await self._send_heartbeat()
-            await asyncio.sleep(_HEARTBEAT_INTERVAL)
+            await asyncio.sleep(heartbeat_interval)

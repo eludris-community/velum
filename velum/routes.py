@@ -14,14 +14,12 @@ __all__: typing.Sequence[str] = (
     "POST",
     "GET_INFO",
     "POST_MESSAGE",
-    "GET_RATELIMITS",
     "POST_ATTACHMENT",
 )
 
 
 @attr.define(hash=True, weakref_slot=False)
 class Route:
-
     method: str = attr.field()
 
     destination: str = attr.field()
@@ -37,7 +35,6 @@ class Route:
 
 @attr.define(hash=True, weakref_slot=False)
 class CompiledRoute:
-
     route: Route = attr.field()
 
     compiled_path: str = attr.field()
@@ -68,7 +65,6 @@ EFFIS: typing.Final[str] = sys.intern("EFFIS")
 
 GET_INFO = Route(GET, OPRISH, "/")
 POST_MESSAGE = Route(POST, OPRISH, "/messages")
-GET_RATELIMITS = Route(GET, OPRISH, "/ratelimits")
 
 
 # Effis routes.

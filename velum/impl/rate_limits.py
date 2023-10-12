@@ -2,13 +2,12 @@ import typing
 
 import typing_extensions
 
-from velum.traits import rate_limit_trait
+from velum.api import rate_limit_trait
 
 __all__: typing.Sequence[str] = ("ExponentialBackoff",)
 
 
 class ExponentialBackoff(rate_limit_trait.RateLimiter):
-
     __slots__ = ("base", "maximum", "increment", "_initial_increment")
 
     base: float

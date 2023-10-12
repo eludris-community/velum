@@ -6,10 +6,11 @@ __title__: typing.Final[str] = "velum"
 __author__: typing.Final[str] = "Chromosomologist"
 __license__: typing.Final[str] = "MIT"
 __copyright__: typing.Final[str] = "© 2022-present Chromosomologist"
-__version__: typing.Final[str] = "0.2.0"
+__version__: typing.Final[str] = "0.4.0"
 
 
 from velum import events as events
+from velum import traits as traits
 from velum.errors import *
 from velum.events import Event as Event
 from velum.events import ExceptionEvent as ExceptionEvent
