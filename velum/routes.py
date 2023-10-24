@@ -96,20 +96,20 @@ GET_INFO = Route(GET, OPRISH, "/")
 
 # Messaging.
 
-CREATE_MESSAGE = Route(POST, OPRISH, "/messages", True)
+CREATE_MESSAGE = Route(POST, OPRISH, "/messages", requires_authentication=True)
 
 # Sessions.
 
 CREATE_SESSION = Route(POST, OPRISH, "/sessions")
-DELETE_SESSION = Route(DELETE, OPRISH, "/sessions/{id}", True)
-GET_SESSIONS = Route(GET, OPRISH, "/sessions", True)
+DELETE_SESSION = Route(DELETE, OPRISH, "/sessions/{id}", requires_authentication=True)
+GET_SESSIONS = Route(GET, OPRISH, "/sessions", requires_authentication=True)
 
 # Users.
 
 CREATE_USER = Route(POST, OPRISH, "/users")
-DELETE_USER = Route(DELETE, OPRISH, "/users", True)
-GET_SELF = Route(GET, OPRISH, "/users/@me", True)
-GET_USER = Route(GET, OPRISH, "/users/{identifier}", False)
-UPDATE_PROFILE = Route(PATCH, OPRISH, "/users/profile", True)
-UPDATE_USER = Route(PATCH, OPRISH, "/users", True)
-VERIFY_USER = Route(POST, OPRISH, "/users/verify", True)
+DELETE_USER = Route(DELETE, OPRISH, "/users", requires_authentication=True)
+GET_SELF = Route(GET, OPRISH, "/users/@me", requires_authentication=True)
+GET_USER = Route(GET, OPRISH, "/users/{identifier}", requires_authentication=False)
+UPDATE_PROFILE = Route(PATCH, OPRISH, "/users/profile", requires_authentication=True)
+UPDATE_USER = Route(PATCH, OPRISH, "/users", requires_authentication=True)
+VERIFY_USER = Route(POST, OPRISH, "/users/verify", requires_authentication=True)

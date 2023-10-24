@@ -195,7 +195,7 @@ class RESTClient(rest_trait.RESTClient):
 
     # Instance.
 
-    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+    async def get_instance_info(self, *, rate_limits: bool = False) -> models.InstanceInfo:
         query = {"ratelimits": "1"} if rate_limits else {}
         response = await self._request(routes.GET_INFO.compile(), query=query)
         assert isinstance(response, dict)
