@@ -390,7 +390,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
                 return
 
             except Exception as exc:
-                self._logger.error(
+                self._logger.exception(
                     "Encountered an unhandled error in communicating with the gateway.",
                     exc_info=exc,
                 )

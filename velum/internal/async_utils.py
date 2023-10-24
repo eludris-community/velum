@@ -41,8 +41,6 @@ async def first_completed(
 
     try:
         await next(iter_)
-    except Exception:
-        raise
     finally:
         await cancel_futures(futures)
 

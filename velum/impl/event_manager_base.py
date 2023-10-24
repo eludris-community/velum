@@ -212,7 +212,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         except Exception as exc:
             exc_info = type(exc), exc, exc.__traceback__.tb_next if exc.__traceback__ else None
             if _is_exception_event(event):
-                _LOGGER.error(
+                _LOGGER.exception(
                     "An exception occurred while handling event '%s', and was ignored.",
                     type(event).__name__,
                     exc_info=exc_info,

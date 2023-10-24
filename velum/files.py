@@ -359,7 +359,7 @@ class _WebReader(AsyncReaderContextManager[WebReader]):
                 client_session.request(method, self._web_resource.url, raise_for_status=False),
             )
 
-            if 200 <= resp.status < 400:
+            if 200 <= resp.status < 400:  # noqa: PLR2004
                 mimetype = None
                 filename = self._web_resource.filename
 
@@ -382,9 +382,9 @@ class _WebReader(AsyncReaderContextManager[WebReader]):
                     size=resp.content_length,
                     head_only=self._head_only,
                 )
-            else:
-                msg = f"{resp.status}, {await resp.read()}"
-                raise RuntimeError(msg)
+
+            msg = f"{resp.status}, {await resp.read()}"
+            raise RuntimeError(msg)  # noqa: TRY301
 
         except Exception:
             await stack.aclose()
