@@ -82,6 +82,8 @@ ignore = [
     "FIX",
     # We use assert as a sort-of inline `typing.cast`.
     "S101",
+    # Low argument counts are hard to deal with for api wrappers.
+    "PLR0913",
     # TODO: Finish documentation and remove these rules.
     "D",
 ]

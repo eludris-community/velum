@@ -444,17 +444,18 @@ class IteratorReader(AsyncReader):
         while True:
             try:
                 while len(buff) < _BUFFER_SIZE:
-                    chunk = await iterator.__anext__()
+                    chunk = await anext(iterator)
                     buff.extend(chunk)
                 yield bytes(buff)
                 buff.clear()
-            except StopAsyncIteration:
+            except StopAsyncIteration:  # noqa: PERF203
                 break
 
         if buff:
             yield bytes(buff)
 
-    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:  # noqa: C901
+    # TODO: Refactor this
+    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:  # noqa: C901, PLR0912
         if isinstance(self.data, bytes):
             for i in range(0, len(self.data), _BUFFER_SIZE):
                 yield self.data[i : i + _BUFFER_SIZE]

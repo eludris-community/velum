@@ -127,7 +127,7 @@ class RESTClient(rest_trait.RESTClient):
                 headers=headers,
             )
 
-        if 200 <= response.status < 300:
+        if 200 <= response.status < 300:  # noqa: PLR2004
             content_type = response.content_type
 
             if content_type == _APPLICATION_JSON:
