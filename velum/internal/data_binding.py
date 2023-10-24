@@ -106,7 +106,7 @@ def set_json_impl(
             msg,
         )
 
-    global dump_json, load_json, JSONDecodeError
+    global dump_json, load_json, JSONDecodeError  # noqa: PLW0603
 
     if loader and dumper and error:
         load_json = loader

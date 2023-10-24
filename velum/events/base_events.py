@@ -36,7 +36,7 @@ class Event(abc.ABC):
             # need to increment the bitmask again.
             return
 
-        global _id_counter  # NOTE: maybe make this a private attr? hmm...
+        global _id_counter  # noqa: PLW0603  # NOTE: maybe make this a private attr? hmm...
 
         # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
         # Non-event classes should be ignored.
