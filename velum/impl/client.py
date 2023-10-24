@@ -216,7 +216,7 @@ class GatewayClient(traits.GatewayClientAware):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: float | int | None,
+        timeout: float | None,
         predicate: event_manager_trait.EventPredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)

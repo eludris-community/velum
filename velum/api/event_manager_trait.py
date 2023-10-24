@@ -63,7 +63,7 @@ class EventManager(typing.Protocol):
         event_type: type[base_events.EventT],
         /,
         *,
-        timeout: float | int | None = None,
+        timeout: float | None = None,
         predicate: EventPredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         ...

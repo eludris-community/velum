@@ -447,7 +447,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         event_type: type[base_events.EventT],
         /,
         *,
-        timeout: float | int | None = None,
+        timeout: float | None = None,
         predicate: event_manager_trait.EventPredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
