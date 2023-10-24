@@ -14,7 +14,6 @@ typing-extensions = "^4.4.0"
 ipykernel = "^6.17.1"
 pyright = "^1.1.313"
 isort = "^5.10.1"
-black = "^23.3.0"
 slotscheck = "^0.16.1"
 ruff = "^0.1.2"
 pre-commit = "^2.20.0"
@@ -35,10 +34,6 @@ exclude = ["**/__init__.py"]
 pythonVersion = "3.10"
 typeCheckingMode = "strict"
 disableBytesTypePromotions = false
-
-[tool.black]
-line-length = 100
-target-version = ["py310"]
 
 [tool.slotscheck]
 strict-imports = true
@@ -87,6 +82,16 @@ ignore = [
     "PLR0913",
     # We do not need cryptographically secure randomisation on our heartbeat :).
     "S311",
+    # Rules recommended to disable in combination with formatter.
+    "COM812",
+    "COM819",
+    "E501",
+    "ISC001",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "W191",
     # TODO: Finish documentation and remove these rules.
     "D",
 ]
