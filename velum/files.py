@@ -25,7 +25,10 @@ from velum.internal import async_utils
 
 ReaderT = typing.TypeVar("ReaderT", bound="AsyncReader")
 ReaderT_co = typing_extensions.TypeVar(
-    "ReaderT_co", bound="AsyncReader", covariant=True, default="AsyncReader"
+    "ReaderT_co",
+    bound="AsyncReader",
+    covariant=True,
+    default="AsyncReader",
 )
 
 PathLike = os.PathLike[str] | str
@@ -73,8 +76,11 @@ def unwrap_bytes(data: RawData) -> bytes:
 
 
 def ensure_resource(
-    data: ResourceLike, /, *, filename: typing.Optional[str] = None
-) -> "Resource[AsyncReader]":
+    data: ResourceLike,
+    /,
+    *,
+    filename: str | None = None,
+) -> Resource[AsyncReader]:
     if isinstance(data, Resource):
         return data
 
@@ -103,7 +109,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     filename: str = attr.field(repr=True)
     """The filename of the resource."""
 
-    mimetype: typing.Optional[str] = attr.field(repr=True)
+    mimetype: str | None = attr.field(repr=True)
     """The mimetype of the resource. May be `None` if not known."""
 
     async def read(self) -> bytes:
@@ -126,9 +132,9 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderT]):
     @abc.abstractmethod
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         ...
 
@@ -148,7 +154,7 @@ class Resource(typing.Generic[ReaderT_co], abc.ABC):
         """Filename of the resource."""
 
     @property
-    def extension(self) -> typing.Optional[str]:
+    def extension(self) -> str | None:
         """File extension, if there is one."""
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
@@ -156,7 +162,7 @@ class Resource(typing.Generic[ReaderT_co], abc.ABC):
     async def read(
         self,
         *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
     ) -> bytes:
         async with self.stream(executor=executor) as reader:
             return await reader.read()
@@ -165,7 +171,7 @@ class Resource(typing.Generic[ReaderT_co], abc.ABC):
     def stream(
         self,
         *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         head_only: bool = False,
     ) -> AsyncReaderContextManager[ReaderT_co]:
         ...
@@ -176,7 +182,7 @@ class Resource(typing.Generic[ReaderT_co], abc.ABC):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(filename={self.filename!r})"
 
-    def __eq__(self, other: typing.Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Resource):
             return self.filename == other.filename
         return False
@@ -196,7 +202,7 @@ class ThreadedFileReader(AsyncReader):
     do not need to be pickled to be communicated.
     """
 
-    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
+    _executor: concurrent.futures.ThreadPoolExecutor | None = attr.field()
     _pointer: typing.BinaryIO = attr.field()
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
@@ -216,14 +222,15 @@ def _open_path(path: pathlib.Path) -> typing.BinaryIO:
 @attr.define(weakref_slot=False)
 @typing.final
 class _ThreadedFileReader(AsyncReaderContextManager[ThreadedFileReader]):
-    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
-    file: typing.Optional[typing.BinaryIO] = attr.field(default=None, init=False)
+    executor: concurrent.futures.ThreadPoolExecutor | None = attr.field()
+    file: typing.BinaryIO | None = attr.field(default=None, init=False)
     filename: str = attr.field()
     path: pathlib.Path = attr.field()
 
     async def __aenter__(self) -> ThreadedFileReader:
         if self.file:
-            raise RuntimeError("File is already open")
+            msg = "File is already open"
+            raise RuntimeError(msg)
 
         loop = asyncio.get_running_loop()
         file = await loop.run_in_executor(self.executor, _open_path, self.path)
@@ -232,12 +239,13 @@ class _ThreadedFileReader(AsyncReaderContextManager[ThreadedFileReader]):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         if not self.file:
-            raise RuntimeError("File isn't open")
+            msg = "File isn't open"
+            raise RuntimeError(msg)
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(self.executor, self.file.close)
@@ -255,13 +263,13 @@ class File(Resource[ThreadedFileReader]):
     is_spoiler: bool
     """Whether the file will be marked as a spoiler."""
 
-    _filename: typing.Optional[str]
+    _filename: str | None
 
     def __init__(
         self,
         path: PathLike,
         /,
-        filename: typing.Optional[str] = None,
+        filename: str | None = None,
         *,
         spoiler: bool = False,
     ) -> None:
@@ -276,7 +284,7 @@ class File(Resource[ThreadedFileReader]):
     def stream(
         self,
         *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         head_only: bool = False,
     ) -> AsyncReaderContextManager[ThreadedFileReader]:
         if executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor):
@@ -284,7 +292,8 @@ class File(Resource[ThreadedFileReader]):
             # thread pool executor anyway, so this is safe enough to do:
             return _ThreadedFileReader(executor, self.filename, self.path)
 
-        raise TypeError("The executor must be a ThreadPoolExecutor or None")
+        msg = "The executor must be a ThreadPoolExecutor or None"
+        raise TypeError(msg)
 
 
 # Web streams.
@@ -306,10 +315,10 @@ class WebReader(AsyncReader):
     reason: str = attr.field()
     """The HTTP response status reason."""
 
-    charset: typing.Optional[str] = attr.field()
+    charset: str | None = attr.field()
     """Optional character set information, if known."""
 
-    size: typing.Optional[int] = attr.field()
+    size: int | None = attr.field()
     """The size of the resource, if known."""
 
     head_only: bool = attr.field()
@@ -335,7 +344,7 @@ class WebReader(AsyncReader):
 class _WebReader(AsyncReaderContextManager[WebReader]):
     _web_resource: URL = attr.field()
     _head_only: bool = attr.field()
-    _exit_stack: typing.Optional[contextlib.AsyncExitStack] = None
+    _exit_stack: contextlib.AsyncExitStack | None = None
 
     async def __aenter__(self) -> WebReader:
         stack = contextlib.AsyncExitStack()
@@ -345,7 +354,7 @@ class _WebReader(AsyncReaderContextManager[WebReader]):
 
         try:
             resp = await stack.enter_async_context(
-                client_session.request(method, self._web_resource.url, raise_for_status=False)
+                client_session.request(method, self._web_resource.url, raise_for_status=False),
             )
 
             if 200 <= resp.status < 400:
@@ -372,7 +381,8 @@ class _WebReader(AsyncReaderContextManager[WebReader]):
                     head_only=self._head_only,
                 )
             else:
-                raise RuntimeError(f"{resp.status}, {await resp.read()}")
+                msg = f"{resp.status}, {await resp.read()}"
+                raise RuntimeError(msg)
 
         except Exception:
             await stack.aclose()
@@ -380,9 +390,9 @@ class _WebReader(AsyncReaderContextManager[WebReader]):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         if self._exit_stack:
             await self._exit_stack.aclose()
@@ -409,7 +419,7 @@ class URL(Resource[WebReader]):
     def stream(
         self,
         *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         head_only: bool = False,
     ) -> AsyncReaderContextManager[WebReader]:
         return _WebReader(self, head_only)
@@ -422,7 +432,7 @@ class URL(Resource[WebReader]):
 class IteratorReader(AsyncReader):
     """Asynchronous file reader that operates on in-memory data."""
 
-    data: typing.Union[bytes, LazyByteIterator] = attr.field()
+    data: bytes | LazyByteIterator = attr.field()
     """The data that will be yielded in chunks."""
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
@@ -486,7 +496,8 @@ class IteratorReader(AsyncReader):
             return bytes(data, "utf-8")
 
         if not isinstance(data, bytes):
-            raise TypeError(f"Expected bytes but received {type(data).__name__}")
+            msg = f"Expected bytes but received {type(data).__name__}"
+            raise TypeError(msg)
         return data
 
 
@@ -499,9 +510,9 @@ class _NoOpAsyncReader(AsyncReaderContextManager[ReaderT]):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         pass
 
@@ -511,10 +522,10 @@ class Bytes(Resource[IteratorReader]):
 
     __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "is_spoiler")
 
-    data: typing.Union[bytes, LazyByteIterator]
+    data: bytes | LazyByteIterator
     """The raw data/provider of raw data to upload."""
 
-    mimetype: typing.Optional[str]
+    mimetype: str | None
     """The provided mimetype, if provided. Otherwise `None`."""
 
     is_spoiler: bool
@@ -522,10 +533,10 @@ class Bytes(Resource[IteratorReader]):
 
     def __init__(
         self,
-        data: typing.Union[RawData, LazyByteIterator],
+        data: RawData | LazyByteIterator,
         filename: str,
         /,
-        mimetype: typing.Optional[str] = None,
+        mimetype: str | None = None,
         *,
         spoiler: bool = False,
     ) -> None:
@@ -551,7 +562,7 @@ class Bytes(Resource[IteratorReader]):
     def stream(
         self,
         *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         head_only: bool = False,
     ) -> AsyncReaderContextManager[IteratorReader]:
         """Start streaming the content in chunks."""

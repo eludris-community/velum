@@ -23,7 +23,7 @@ class Event(abc.ABC):
     __slots__ = ()
 
     __bitmask: int
-    __dispatches: typing.Tuple[typing.Type[Event], ...]
+    __dispatches: tuple[type[Event], ...]
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -50,7 +50,7 @@ class Event(abc.ABC):
 
     @class_utils.classproperty
     @classmethod
-    def dispatches(cls) -> typing.Tuple[typing.Type[Event], ...]:
+    def dispatches(cls) -> tuple[type[Event], ...]:
         return cls.__dispatches
 
 

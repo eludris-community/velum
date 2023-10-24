@@ -60,7 +60,7 @@ def load_json(_: typing.AnyStr, /) -> JSONish:
     raise NotImplementedError
 
 
-JSONDecodeError: typing.Type[Exception] = Exception
+JSONDecodeError: type[Exception] = Exception
 """Exception raised when loading an invalid JSON string"""
 
 
@@ -86,25 +86,24 @@ def set_json_impl(*, impl: JSONImpl) -> None:
 def set_json_impl(
     loader: _JSONLoader,
     dumper: _JSONDumper,
-    error: typing.Type[Exception],
+    error: type[Exception],
     /,
 ) -> None:
     ...
 
 
 def set_json_impl(
-    loader: typing.Optional[_JSONLoader] = None,
-    dumper: typing.Optional[_JSONDumper] = None,
-    error: typing.Optional[typing.Type[Exception]] = None,
+    loader: _JSONLoader | None = None,
+    dumper: _JSONDumper | None = None,
+    error: type[Exception] | None = None,
     /,
     *,
-    impl: typing.Optional[JSONImpl] = None,
+    impl: JSONImpl | None = None,
 ) -> None:
     if (not (loader and dumper and error) and not impl) or ((loader or dumper or error) and impl):
+        msg = "Please provide either:\n- All of `loader`, `dumper` and `error`,\n- only `implementation`."
         raise ValueError(
-            "Please provide either:"
-            "\n- All of `loader`, `dumper` and `error`,"
-            "\n- only `implementation`."
+            msg,
         )
 
     global dump_json, load_json, JSONDecodeError
@@ -127,10 +126,9 @@ def set_json_impl(
             orjson = importlib.import_module("orjson")
 
         except ImportError as exc:
+            msg = "Cannot set 'orjson' as velum's JSON implementation, as you seem to not have it installed.\nPlease install orjson and try again. Alternatively, orjson comes installed with 'velum[speedups]'."
             raise ImportError(
-                "Cannot set 'orjson' as velum's JSON implementation, as you seem to not"
-                " have it installed.\nPlease install orjson and try again."
-                " Alternatively, orjson comes installed with 'velum[speedups]'."
+                msg,
             ) from exc
 
         else:
@@ -139,9 +137,9 @@ def set_json_impl(
             JSONDecodeError = orjson.JSONDecodeError
             return
 
+    msg = "Incorrect values have been passed, and led to an unexpected result. Please double-check your input."
     raise TypeError(
-        "Incorrect values have been passed, and led to an unexpected result."
-        " Please double-check your input."
+        msg,
     )
 
 
@@ -158,17 +156,17 @@ class FormBuilder:
 
     __slots__: typing.Sequence[str] = ("_executor", "_fields", "_resources")
 
-    def __init__(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> None:
+    def __init__(self, executor: concurrent.futures.Executor | None = None) -> None:
         self._executor = executor
-        self._fields: typing.List[typing.Tuple[str, str, typing.Optional[str]]] = []
-        self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
+        self._fields: list[tuple[str, str, str | None]] = []
+        self._resources: list[tuple[str, files.Resource[files.AsyncReader]]] = []
 
     def add_field(
         self,
         name: str,
         data: str,
         *,
-        content_type: typing.Optional[str] = None,
+        content_type: str | None = None,
     ) -> typing_extensions.Self:
         self._fields.append((name, data, content_type))
         return self

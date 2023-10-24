@@ -1,5 +1,3 @@
-# TODO: fancy stuff when ratelimits and url params become a thing
-
 from __future__ import annotations
 
 import sys
@@ -37,11 +35,13 @@ class Route:
 
     path_template: str = attr.field()
 
-    requires_authentication: typing.Optional[bool] = attr.field(default=None)
+    requires_authentication: bool | None = attr.field(default=None)
 
     def compile(self, **url_params: typing.Any) -> CompiledRoute:
         return CompiledRoute(
-            self, self.path_template.format_map(url_params), self.requires_authentication
+            self,
+            self.path_template.format_map(url_params),
+            self.requires_authentication,
         )
 
     def __str__(self) -> str:
@@ -54,7 +54,7 @@ class CompiledRoute:
 
     compiled_path: str = attr.field()
 
-    requires_authentication: typing.Optional[bool] = attr.field(default=None)
+    requires_authentication: bool | None = attr.field(default=None)
 
     @property
     def method(self) -> str:

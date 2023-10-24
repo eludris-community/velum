@@ -29,8 +29,9 @@ class EntityFactory(typing.Protocol):
         ...
 
     def deserialize_session_created(
-        self, payload: data_binding.JSONObject
-    ) -> typing.Tuple[str, models.Session]:
+        self,
+        payload: data_binding.JSONObject,
+    ) -> tuple[str, models.Session]:
         ...
 
     def deserialize_session(self, payload: data_binding.JSONObject) -> models.Session:
@@ -43,6 +44,7 @@ class EntityFactory(typing.Protocol):
         ...
 
     def deserialize_presence_update(
-        self, payload: data_binding.JSONObject
+        self,
+        payload: data_binding.JSONObject,
     ) -> models.PresenceUpdate:
         ...

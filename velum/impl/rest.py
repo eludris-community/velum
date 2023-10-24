@@ -30,16 +30,16 @@ class RESTClient(rest_trait.RESTClient):
         "_session",
     )
 
-    _session: typing.Optional[aiohttp.ClientSession]
+    _session: aiohttp.ClientSession | None
 
     def __init__(
         self,
         *,
-        cdn_url: typing.Optional[str] = None,
-        rest_url: typing.Optional[str] = None,
-        token: typing.Optional[str] = None,
-        entity_factory: typing.Optional[entity_factory_trait.EntityFactory] = None,
-    ):
+        cdn_url: str | None = None,
+        rest_url: str | None = None,
+        token: str | None = None,
+        entity_factory: entity_factory_trait.EntityFactory | None = None,
+    ) -> None:
         self._entity_factory = (
             entity_factory if entity_factory is not None else entity_factory_impl.EntityFactory()
         )
@@ -60,13 +60,15 @@ class RESTClient(rest_trait.RESTClient):
 
     def _assert_and_return_session(self) -> aiohttp.ClientSession:
         if self._session is None:
-            raise RuntimeError("Cannot use an inactive RESTClient.")
+            msg = "Cannot use an inactive RESTClient."
+            raise RuntimeError(msg)
 
         return self._session
 
     def start(self) -> None:
         if self._session is not None:
-            raise RuntimeError("Cannot start an already running RESTClient.")
+            msg = "Cannot start an already running RESTClient."
+            raise RuntimeError(msg)
 
         self._session = aiohttp.ClientSession(json_serialize=data_binding.dump_json)
 
@@ -80,9 +82,9 @@ class RESTClient(rest_trait.RESTClient):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         await self.close()
 
@@ -94,12 +96,12 @@ class RESTClient(rest_trait.RESTClient):
         self,
         route: routes.CompiledRoute,
         *,
-        json: typing.Optional[typing.Any] = None,
-        form_builder: typing.Optional[data_binding.FormBuilder] = None,
-        query: typing.Optional[typing.Mapping[str, str]] = None,
+        json: typing.Any | None = None,
+        form_builder: data_binding.FormBuilder | None = None,
+        query: typing.Mapping[str, str] | None = None,
     ):
         url = self._complete_route(route)
-        headers: typing.Dict[str, str] = {}
+        headers: dict[str, str] = {}
 
         if route.requires_authentication is not None:
             # Does not require authentication, but is preferred (higher rate limit).
@@ -107,7 +109,8 @@ class RESTClient(rest_trait.RESTClient):
                 headers["Authorization"] = self._token
             elif route.requires_authentication:
                 if self._token is None:
-                    raise errors.HTTPError("Cannot use an authenticated route without a token.")
+                    msg = "Cannot use an authenticated route without a token."
+                    raise errors.HTTPError(msg)
 
                 headers["Authorization"] = self._token
 
@@ -131,11 +134,13 @@ class RESTClient(rest_trait.RESTClient):
                 return data_binding.load_json(await response.read())
 
             real_url = str(response.real_url)
-            raise errors.HTTPError(f"Expected JSON response. ({content_type=}, {real_url=})")
+            msg = f"Expected JSON response. (content_type={content_type!r}, real_url={real_url!r})"
+            raise errors.HTTPError(msg)
 
         print(response.status, await response.read())
 
-        raise errors.HTTPError("get good lol")
+        msg = "get good lol"
+        raise errors.HTTPError(msg)
 
     # Ordered by docs.
     # Files.
@@ -207,8 +212,13 @@ class RESTClient(rest_trait.RESTClient):
     # Sessions
 
     async def create_session(
-        self, *, identifier: str, password: str, platform: str = "python", client: str = "velum"
-    ) -> typing.Tuple[str, models.Session]:
+        self,
+        *,
+        identifier: str,
+        password: str,
+        platform: str = "python",
+        client: str = "velum",
+    ) -> tuple[str, models.Session]:
         body = {
             "identifier": identifier,
             "password": password,
@@ -253,7 +263,7 @@ class RESTClient(rest_trait.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_user(response)
 
-    async def get_user(self, identifier: typing.Union[int, str], /) -> models.User:
+    async def get_user(self, identifier: int | str, /) -> models.User:
         response = await self._request(routes.GET_USER.compile(identifier=identifier))
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_user(response)
@@ -261,12 +271,12 @@ class RESTClient(rest_trait.RESTClient):
     async def update_profile(
         self,
         *,
-        display_name: typing.Optional[str] = None,
-        status: typing.Optional[str] = None,
-        status_type: typing.Optional[models.StatusType] = None,
-        bio: typing.Optional[str] = None,
-        avatar: typing.Optional[int] = None,
-        banner: typing.Optional[int] = None,
+        display_name: str | None = None,
+        status: str | None = None,
+        status_type: models.StatusType | None = None,
+        bio: str | None = None,
+        avatar: int | None = None,
+        banner: int | None = None,
     ) -> models.User:
         body = {
             "display_name": display_name,
@@ -284,9 +294,9 @@ class RESTClient(rest_trait.RESTClient):
         self,
         *,
         password: str,
-        username: typing.Optional[str] = None,
-        email: typing.Optional[str] = None,
-        new_password: typing.Optional[str] = None,
+        username: str | None = None,
+        email: str | None = None,
+        new_password: str | None = None,
     ) -> models.User:
         body = {
             "password": password,

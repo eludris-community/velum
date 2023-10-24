@@ -25,17 +25,17 @@ __all__: typing.Sequence[str] = (
 
 
 if typing.TYPE_CHECKING:
-    _ListenerMapT = typing.Dict[
-        typing.Type[base_events.EventT],
-        typing.List[base_events.EventCallbackT[base_events.EventT]],
+    _ListenerMapT = dict[
+        type[base_events.EventT],
+        list[base_events.EventCallbackT[base_events.EventT]],
     ]
-    _WaiterPairT = typing.Tuple[
-        typing.Optional[event_manager_trait.EventPredicateT[base_events.EventT]],
+    _WaiterPairT = tuple[
+        event_manager_trait.EventPredicateT[base_events.EventT] | None,
         asyncio.Future[base_events.EventT],
     ]
-    _WaiterMapT = typing.Dict[
-        typing.Type[base_events.EventT],
-        typing.Set[_WaiterPairT[base_events.EventT]],
+    _WaiterMapT = dict[
+        type[base_events.EventT],
+        set[_WaiterPairT[base_events.EventT]],
     ]
     ConsumerCallback = typing.Callable[
         [gateway_trait.GatewayHandler, data_binding.JSONObject],
@@ -81,23 +81,29 @@ class Consumer(typing.Generic[_EventManagerT]):
         return self.listener_group_count > 0 or self.waiter_group_count > 0
 
     @typing.overload
-    def __get__(self, instance: None, owner: typing.Type[typing.Any]) -> typing_extensions.Self:
+    def __get__(self, instance: None, owner: type[typing.Any]) -> typing_extensions.Self:
         ...
 
     @typing.overload
     def __get__(
-        self, instance: _BoundConsumer[_EventManagerT], owner: typing.Type[typing.Any]
+        self,
+        instance: _BoundConsumer[_EventManagerT],
+        owner: type[typing.Any],
     ) -> Consumer[_EventManagerT]:
         ...
 
     @typing.overload
     def __get__(
-        self, instance: typing.Any, owner: typing.Type[typing.Any]
+        self,
+        instance: typing.Any,
+        owner: type[typing.Any],
     ) -> _BoundConsumer[_EventManagerT]:
         ...
 
     def __get__(
-        self, instance: typing.Optional[typing.Any], owner: typing.Type[typing.Any]
+        self,
+        instance: typing.Any | None,
+        owner: type[typing.Any],
     ) -> _BoundConsumer[_EventManagerT] | Consumer[_EventManagerT]:
         if instance is None or isinstance(instance, _BoundConsumer):
             return self
@@ -106,7 +112,7 @@ class Consumer(typing.Generic[_EventManagerT]):
 
 
 def is_consumer_for(
-    *event_types: typing.Type[base_events.Event],
+    *event_types: type[base_events.Event],
 ) -> typing.Callable[[UnboundConsumerCallback[_EventManagerT]], Consumer[_EventManagerT]]:
     # Get all event subtypes dispatched by the provided events and eliminate
     # duplicates...
@@ -115,7 +121,7 @@ def is_consumer_for(
             subtype
             for event_type in event_types
             for subtype in event_type.dispatches
-        }  # fmt: skip
+        },  # fmt: skip
     )
 
     bitmask = 0
@@ -175,11 +181,11 @@ class _BoundConsumer(typing.Generic[_EventManagerT]):
 class EventManagerBase(event_manager_trait.EventManager):
     __slots__ = ("_consumers", "_listeners", "_waiters")
 
-    _consumers: typing.Dict[str, _BoundConsumer[typing_extensions.Self]]
+    _consumers: dict[str, _BoundConsumer[typing_extensions.Self]]
     _waiters: _WaiterMapT[base_events.Event]
     _listeners: _ListenerMapT[base_events.Event]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._consumers = {}
         self._listeners = {}
         self._waiters = {}
@@ -251,11 +257,13 @@ class EventManagerBase(event_manager_trait.EventManager):
                     "message": "An exception occurred while dispatching raw event.",
                     "exception": exc,
                     "task": asyncio.current_task(),
-                }
+                },
             )
 
     def _increment_listener_group_count(
-        self, event_type: typing.Type[base_events.Event], count: typing.Literal[-1, 1]
+        self,
+        event_type: type[base_events.Event],
+        count: typing.Literal[-1, 1],
     ) -> None:
         event_bitmask = event_type.bitmask
         for consumer in self._consumers.values():
@@ -263,7 +271,9 @@ class EventManagerBase(event_manager_trait.EventManager):
                 consumer.listener_group_count += count
 
     def _increment_waiter_group_count(
-        self, event_type: typing.Type[base_events.Event], count: typing.Literal[-1, 1]
+        self,
+        event_type: type[base_events.Event],
+        count: typing.Literal[-1, 1],
     ) -> None:
         event_bitmask = event_type.bitmask
         for consumer in self._consumers.values():
@@ -288,7 +298,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         )
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
-        tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
+        tasks: list[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches:
             for callback in self._listeners.get(cls, ()):
@@ -319,11 +329,12 @@ class EventManagerBase(event_manager_trait.EventManager):
 
     def subscribe(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         callback: base_events.EventCallbackT[base_events.EventT],
     ) -> None:
         if not asyncio.iscoroutinefunction(callback):
-            raise TypeError(f"Cannot subscribe to non-coroutine function '{callback.__name__}'.")
+            msg = f"Cannot subscribe to non-coroutine function '{callback.__name__}'."
+            raise TypeError(msg)
 
         _LOGGER.debug(
             "Subscribing callback '%s%s' to event-type '%s.%s'.",
@@ -341,7 +352,7 @@ class EventManagerBase(event_manager_trait.EventManager):
 
     def unsubscribe(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         callback: base_events.EventCallbackT[base_events.EventT],
     ) -> None:
         listeners = self._listeners.get(event_type)
@@ -364,10 +375,14 @@ class EventManagerBase(event_manager_trait.EventManager):
             self._increment_listener_group_count(event_type, -1)
 
     def get_listeners(  # pyright: ignore[reportIncompatibleMethodOverride]
-        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
+        self,
+        event_type: type[base_events.EventT],
+        /,
+        *,
+        polymorphic: bool = True,
     ) -> typing.Collection[base_events.EventCallbackT[base_events.EventT]]:
         if polymorphic:
-            listeners: typing.List[base_events.EventCallbackT[base_events.EventT]] = []
+            listeners: list[base_events.EventCallbackT[base_events.EventT]] = []
             for event in event_type.dispatches:
                 if subscribed_listeners := self._listeners.get(event):
                     listeners.extend(subscribed_listeners)
@@ -381,7 +396,7 @@ class EventManagerBase(event_manager_trait.EventManager):
 
     def listen(
         self,
-        *event_types: typing.Type[base_events.EventT],
+        *event_types: type[base_events.EventT],
     ) -> typing.Callable[
         [base_events.EventCallbackT[base_events.EventT]],
         base_events.EventCallbackT[base_events.EventT],
@@ -399,9 +414,9 @@ class EventManagerBase(event_manager_trait.EventManager):
                     resolved_types = event_types
 
                 else:
+                    msg = "Please provide the event type either as an argument to the decorator or as a type hint."
                     raise TypeError(
-                        "Please provide the event type either as an argument to the decorator "
-                        "or as a type hint."
+                        msg,
                     )
 
             else:
@@ -413,9 +428,9 @@ class EventManagerBase(event_manager_trait.EventManager):
                     resolved_types = {class_utils.strip_generic(annotation)}
 
                 if event_types and resolved_types != set(event_types):
+                    msg = "Please make sure the event types provided to the decorator match those provided as a typehint."
                     raise TypeError(
-                        "Please make sure the event types provided to the decorator match those "
-                        "provided as a typehint."
+                        msg,
                     )
 
             for event_type in resolved_types:
@@ -427,11 +442,11 @@ class EventManagerBase(event_manager_trait.EventManager):
 
     async def wait_for(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         *,
-        timeout: typing.Optional[float | int] = None,
-        predicate: typing.Optional[event_manager_trait.EventPredicateT[base_events.EventT]] = None,
+        timeout: float | int | None = None,
+        predicate: event_manager_trait.EventPredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
         waiter_set: typing.MutableSet[_WaiterPairT[base_events.Event]]
