@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import ipaddress
 import typing
 from enum import Enum
 
 import attr
+
+if typing.TYPE_CHECKING:
+    import ipaddress
 
 __all__: typing.Sequence[str] = (
     "Message",

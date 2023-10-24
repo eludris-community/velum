@@ -8,7 +8,9 @@ from velum.api import gateway_trait
 from velum.events import connection_events
 from velum.events import message_events
 from velum.events import user_events
-from velum.internal import data_binding
+
+if typing.TYPE_CHECKING:
+    from velum.internal import data_binding
 
 __all__: typing.Sequence[str] = ("EventFactory",)
 

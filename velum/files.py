@@ -12,7 +12,6 @@ import io
 import mimetypes
 import os
 import pathlib
-import types
 import typing
 import urllib.parse
 import uuid
@@ -22,6 +21,9 @@ import attr
 import typing_extensions
 
 from velum.internal import async_utils
+
+if typing.TYPE_CHECKING:
+    import types
 
 ReaderT = typing.TypeVar("ReaderT", bound="AsyncReader")
 ReaderT_co = typing_extensions.TypeVar(

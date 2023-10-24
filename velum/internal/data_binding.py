@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-import concurrent.futures
-import contextlib
 import enum
 import importlib
 import typing
 
 import aiohttp
-import typing_extensions
 
-from velum import files
+if typing.TYPE_CHECKING:
+    import concurrent.futures
+    import contextlib
+
+    import typing_extensions
+
+    from velum import files
 
 __all__: typing.Sequence[str] = (
     "JSONish",
