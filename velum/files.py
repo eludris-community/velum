@@ -287,7 +287,7 @@ class File(Resource[ThreadedFileReader]):
         self,
         *,
         executor: concurrent.futures.Executor | None = None,
-        head_only: bool = False,
+        head_only: bool = False,  # noqa: ARG002
     ) -> AsyncReaderContextManager[ThreadedFileReader]:
         if executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor):
             # asyncio forces the default executor when this is None to always be a
@@ -421,7 +421,7 @@ class URL(Resource[WebReader]):
     def stream(
         self,
         *,
-        executor: concurrent.futures.Executor | None = None,
+        executor: concurrent.futures.Executor | None = None,  # noqa: ARG002
         head_only: bool = False,
     ) -> AsyncReaderContextManager[WebReader]:
         return _WebReader(self, head_only)
@@ -564,8 +564,8 @@ class Bytes(Resource[IteratorReader]):
     def stream(
         self,
         *,
-        executor: concurrent.futures.Executor | None = None,
-        head_only: bool = False,
+        executor: concurrent.futures.Executor | None = None,  # noqa: ARG002
+        head_only: bool = False,  # noqa: ARG002
     ) -> AsyncReaderContextManager[IteratorReader]:
         """Start streaming the content in chunks."""
         return _NoOpAsyncReader(IteratorReader(self.filename, self.mimetype, self.data))

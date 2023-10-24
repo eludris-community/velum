@@ -23,7 +23,7 @@ class EventFactory(event_factory_trait.EventFactory):
 
     def deserialize_ratelimit_event(
         self,
-        gateway_connection: gateway_trait.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,  # noqa: ARG002
         payload: data_binding.JSONObject,
     ) -> connection_events.RatelimitEvent:
         return connection_events.RatelimitEvent(
@@ -32,14 +32,14 @@ class EventFactory(event_factory_trait.EventFactory):
 
     def deserialize_hello_event(
         self,
-        gateway_connection: gateway_trait.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,  # noqa: ARG002
         payload: data_binding.JSONObject,
     ) -> connection_events.HelloEvent:
         return connection_events.HelloEvent(data=self._entity_factory.deserialize_hello(payload))
 
     def deserialize_message_create_event(
         self,
-        gateway_connection: gateway_trait.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,  # noqa: ARG002
         payload: data_binding.JSONObject,
     ) -> message_events.MessageCreateEvent:
         return message_events.MessageCreateEvent(
@@ -48,7 +48,7 @@ class EventFactory(event_factory_trait.EventFactory):
 
     def deserialize_authenticated_event(
         self,
-        gateway_connection: gateway_trait.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,  # noqa: ARG002
         payload: data_binding.JSONObject,
     ) -> connection_events.AuthenticatedEvent:
         return connection_events.AuthenticatedEvent(
@@ -57,14 +57,14 @@ class EventFactory(event_factory_trait.EventFactory):
 
     def deserialize_user_update_event(
         self,
-        gateway_connection: gateway_trait.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,  # noqa: ARG002
         payload: data_binding.JSONObject,
     ) -> user_events.UserUpdateEvent:
         return user_events.UserUpdateEvent(user=self._entity_factory.deserialize_user(payload))
 
     def deserialize_presence_update_event(
         self,
-        gateway_connection: gateway_trait.GatewayHandler,
+        gateway_connection: gateway_trait.GatewayHandler,  # noqa: ARG002
         payload: data_binding.JSONObject,
     ) -> user_events.PresenceUpdateEvent:
         return user_events.PresenceUpdateEvent(
