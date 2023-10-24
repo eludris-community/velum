@@ -16,7 +16,7 @@ pyright = "^1.1.313"
 isort = "^5.10.1"
 slotscheck = "^0.16.1"
 ruff = "^0.1.2"
-pre-commit = "^2.20.0"
+pre-commit = "^3.5.0"
 
 [tool.poetry.group.speedups.dependencies]
 aiohttp = { extras = ["speedups"], version = "^3.8.3" }
