@@ -185,9 +185,7 @@ class GatewayWebsocket:
             raise errors.GatewayConnectionError(msg)
 
         msg = "Unexpected websocket exception from gateway."
-        raise errors.GatewayError(
-            msg,
-        ) from self._ws.exception()
+        raise errors.GatewayError(msg) from self._ws.exception()
 
 
 class GatewayHandler(gateway_trait.GatewayHandler):
@@ -429,9 +427,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
             await asyncio.wait_for(self._authenticated_event.wait(), timeout=10.0)
         except asyncio.TimeoutError:
             msg = "Failed to authenticate with the gateway."
-            raise errors.GatewayConnectionError(
-                msg,
-            ) from None
+            raise errors.GatewayConnectionError(msg) from None
 
         # Indicate connection logic is done.
         self._connection_event.set()

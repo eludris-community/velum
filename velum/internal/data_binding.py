@@ -104,10 +104,12 @@ def set_json_impl(
     impl: JSONImpl | None = None,
 ) -> None:
     if (not (loader and dumper and error) and not impl) or ((loader or dumper or error) and impl):
-        msg = "Please provide either:\n- All of `loader`, `dumper` and `error`,\n- only `implementation`."
-        raise ValueError(
-            msg,
+        msg = (
+            "Please provide either:"
+            "\n- All of `loader`, `dumper` and `error`,"
+            "\n- only `implementation`."
         )
+        raise ValueError(msg)
 
     global dump_json, load_json, JSONDecodeError  # noqa: PLW0603
 
@@ -129,10 +131,13 @@ def set_json_impl(
             orjson = importlib.import_module("orjson")
 
         except ImportError as exc:
-            msg = "Cannot set 'orjson' as velum's JSON implementation, as you seem to not have it installed.\nPlease install orjson and try again. Alternatively, orjson comes installed with 'velum[speedups]'."
-            raise ImportError(
-                msg,
-            ) from exc
+            msg = (
+                "Cannot set 'orjson' as velum's JSON implementation, as you"
+                " seem to not have it installed."
+                "\nPlease install orjson and try again. Alternatively, orjson"
+                " comes installed with 'velum[speedups]'."
+            )
+            raise ImportError(msg) from exc
 
         else:
             load_json = orjson.loads
@@ -140,10 +145,11 @@ def set_json_impl(
             JSONDecodeError = orjson.JSONDecodeError
             return
 
-    msg = "Incorrect values have been passed, and led to an unexpected result. Please double-check your input."
-    raise TypeError(
-        msg,
+    msg = (
+        "Incorrect values have been passed, and led to an unexpected result."
+        " Please double-check your input."
     )
+    raise TypeError(msg)
 
 
 # Set the stdlib `json` module as the default implementation

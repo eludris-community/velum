@@ -416,10 +416,11 @@ class EventManagerBase(event_manager_trait.EventManager):
                     resolved_types = event_types
 
                 else:
-                    msg = "Please provide the event type either as an argument to the decorator or as a type hint."
-                    raise TypeError(
-                        msg,
+                    msg = (
+                        "Please provide the event type either as an argument to"
+                        " the decorator or as a type hint."
                     )
+                    raise TypeError(msg)
 
             else:
                 if typing.get_origin(annotation) in _UNIONS:
@@ -430,10 +431,11 @@ class EventManagerBase(event_manager_trait.EventManager):
                     resolved_types = {class_utils.strip_generic(annotation)}
 
                 if event_types and resolved_types != set(event_types):
-                    msg = "Please make sure the event types provided to the decorator match those provided as a typehint."
-                    raise TypeError(
-                        msg,
+                    msg = (
+                        "Please make sure the event types provided to the"
+                        " decorator match those provided as a typehint."
                     )
+                    raise TypeError(msg)
 
             for event_type in resolved_types:
                 self.subscribe(event_type, callback)
