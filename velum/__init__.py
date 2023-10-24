@@ -6,7 +6,7 @@ __title__: typing.Final[str] = "velum"
 __author__: typing.Final[str] = "Chromosomologist"
 __license__: typing.Final[str] = "MIT"
 __copyright__: typing.Final[str] = "© 2022-present Chromosomologist"
-__version__: typing.Final[str] = "0.4.0"
+__version__: typing.Final[str] = "0.5.0"
 
 
 from velum import events as events

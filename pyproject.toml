@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "velum"
-version = "0.4.0"
+version = "0.5.0"
 description = "An opinionated wrapper for the Eludris API."
 authors = ["Chromosomologist <chromosomologist@gmail.com>"]
 readme = "README.md"
