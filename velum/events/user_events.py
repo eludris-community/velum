@@ -4,8 +4,10 @@ import typing
 
 import attr
 
-from velum import models
 from velum.events import base_events
+
+if typing.TYPE_CHECKING:
+    from velum import models
 
 __all__: typing.Sequence[str] = (
     "UserUpdateEvent",

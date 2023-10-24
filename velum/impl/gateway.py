@@ -28,10 +28,10 @@ if typing.TYPE_CHECKING:
 
     class _WSMessage(typing.Protocol):
         type: aiohttp.WSMsgType
-        data: typing.Optional[str | bytes]
-        extra: typing.Optional[str]
+        data: str | bytes | None
+        extra: str | None
 
-        def json(self, loads: typing.Callable[[typing.Any], typing.Any] = ...) -> typing.Any:
+        def json(self, loads: typing.Callable[[typing.Any], typing.Any] = ...) -> typing.Any:  # noqa: ANN401
             ...
 
 
@@ -65,7 +65,7 @@ class GatewayWebsocket:
         logger: logging.Logger,
         websocket: aiohttp.ClientWebSocketResponse,
         exit_stack: contextlib.AsyncExitStack,
-    ):
+    ) -> None:
         self._gateway_url = gateway_url
         self._logger = logger
         self._ws = websocket
@@ -84,14 +84,14 @@ class GatewayWebsocket:
 
         try:
             session = await exit_stack.enter_async_context(
-                aiohttp.ClientSession(json_serialize=data_binding.dump_json)
+                aiohttp.ClientSession(json_serialize=data_binding.dump_json),
             )
             ws = await exit_stack.enter_async_context(
                 session.ws_connect(  # pyright: ignore[reportUnknownMemberType]
                     url,
                     max_msg_size=0,
                     autoclose=False,
-                )
+                ),
             )
 
             return cls(
@@ -105,10 +105,11 @@ class GatewayWebsocket:
             await exit_stack.aclose()
             await asyncio.sleep(0.25)  # Workaround for aiohttp fuckywucky
 
-            if isinstance(exc, (aiohttp.ClientConnectionError, aiohttp.ClientResponseError)):
+            if isinstance(exc, aiohttp.ClientConnectionError | aiohttp.ClientResponseError):
                 raise errors.GatewayConnectionError(str(exc)) from None
-            elif isinstance(exc, asyncio.TimeoutError):
-                raise errors.GatewayConnectionError("Connection timed out.") from None
+            if isinstance(exc, asyncio.TimeoutError):
+                msg = "Connection timed out."
+                raise errors.GatewayConnectionError(msg) from None
 
             raise
 
@@ -140,13 +141,16 @@ class GatewayWebsocket:
 
         await self._ws.send_str(payload)
 
-    async def receive_json(self) -> typing.Any:
+    async def receive_json(self) -> data_binding.JSONObject:
         payload = await self._receive_and_validate_text()
 
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("Received payload with size %s:\n\t%s", len(payload), payload)
 
-        return data_binding.load_json(payload)
+        data = data_binding.load_json(payload)
+        assert isinstance(data, dict)
+
+        return data
 
     async def _receive_and_validate_text(self) -> str:
         message = typing.cast("_WSMessage", await self._ws.receive())
@@ -156,15 +160,18 @@ class GatewayWebsocket:
             return message.data
 
         self._raise_for_unhandled_message(message)
+        return None
 
     # TODO: implement zlib whenever eludris does
 
-    def _raise_for_unhandled_message(self, message: "_WSMessage") -> typing.NoReturn:
+    def _raise_for_unhandled_message(self, message: _WSMessage) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
-            raise errors.GatewayError("Unexpected message type: received TEXT, expected BINARY.")
+            msg = "Unexpected message type: received TEXT, expected BINARY."
+            raise errors.GatewayError(msg)
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            raise errors.GatewayError("Unexpected message type: received BINARY, expected TEXT.")
+            msg = "Unexpected message type: received BINARY, expected TEXT."
+            raise errors.GatewayError(msg)
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             assert message.data is not None
@@ -174,11 +181,11 @@ class GatewayWebsocket:
             raise errors.GatewayConnectionClosedError(message.extra, close_code)
 
         if message.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
-            raise errors.GatewayConnectionError("Socket was closed.")
+            msg = "Socket was closed."
+            raise errors.GatewayConnectionError(msg)
 
-        raise errors.GatewayError(
-            "Unexpected websocket exception from gateway."
-        ) from self._ws.exception()
+        msg = "Unexpected websocket exception from gateway."
+        raise errors.GatewayError(msg) from self._ws.exception()
 
 
 class GatewayHandler(gateway_trait.GatewayHandler):
@@ -199,25 +206,25 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         "_user",
     )
 
-    _connection_event: typing.Optional[asyncio.Event]
+    _connection_event: asyncio.Event | None
     _authenticated_event: asyncio.Event
     _event_manager: event_manager_trait.EventManager
-    _gateway_ws: typing.Optional[GatewayWebsocket]
+    _gateway_ws: GatewayWebsocket | None
     _heartbeat_latency: float
-    _keep_alive_task: typing.Optional[asyncio.Task[None]]
+    _keep_alive_task: asyncio.Task[None] | None
     _last_heartbeat: float
     _last_heartbeat_ack: float
     _logger: logging.Logger
     _started_at: float
-    _user: typing.Optional[models.User]
+    _user: models.User | None
 
     def __init__(
         self,
         *,
-        gateway_url: typing.Optional[str] = None,
+        gateway_url: str | None = None,
         event_manager: event_manager_trait.EventManager,
         token: str,
-    ):
+    ) -> None:
         self._event_manager = event_manager
 
         event_manager.subscribe(events.AuthenticatedEvent, self._handle_authenticated)
@@ -243,13 +250,15 @@ class GatewayHandler(gateway_trait.GatewayHandler):
     @property
     def user(self) -> models.User:
         if self._user is None:
-            raise RuntimeError("Cannot access user before authentication.")
+            msg = "Cannot access user before authentication."
+            raise RuntimeError(msg)
 
         return self._user
 
     async def start(self) -> None:
         if self._connection_event:
-            raise RuntimeError("Cannot start an already connected GatewayHandler.")
+            msg = "Cannot start an already connected GatewayHandler."
+            raise RuntimeError(msg)
 
         self._connection_event = asyncio.Event()
 
@@ -266,13 +275,15 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
         if not self._connection_event.is_set():
             keep_alive_task.result()
-            raise RuntimeError("Connection was closed before it could start successfully.")
+            msg = "Connection was closed before it could start successfully."
+            raise RuntimeError(msg)
 
         self._keep_alive_task = keep_alive_task
 
     async def close(self) -> None:
         if not self._keep_alive_task:
-            raise RuntimeError("Cannot close an inactive GatewayHandler")
+            msg = "Cannot close an inactive GatewayHandler"
+            raise RuntimeError(msg)
 
         if self._is_closing:
             # Repeated call of this method. Wait for the keep-alive task to finish and just return.
@@ -297,6 +308,8 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         assert self._connection_event is not None
 
         payload = await self._gateway_ws.receive_json()
+        assert isinstance(payload, dict)
+
         op = payload[_OP]
 
         if op != _HELLO:
@@ -307,11 +320,15 @@ class GatewayHandler(gateway_trait.GatewayHandler):
             )
             # TODO: Custom exception and don't use magic number.
             await self._gateway_ws.send_close(code=1002, message=b"Expected HELLO op.")
-            raise RuntimeError(f"Expected opcode {_HELLO}, received {op} instead.")
+            msg = f"Expected opcode {_HELLO}, received {op} instead."
+            raise RuntimeError(msg)
+
+        data = typing.cast(data_binding.JSONObject, payload[_D])
+        heartbeat_interval = typing.cast(float, data["heartbeat_interval"])  # in ms
 
         # TODO: Maybe return fully deserialised event and use ratelimit info.
         #       For now, only using the heartbeat interval will do.
-        return float(payload[_D]["heartbeat_interval"]) / 1_000.0
+        return heartbeat_interval / 1_000.0
 
     async def _poll_events(self) -> None:
         assert self._gateway_ws is not None
@@ -320,6 +337,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         while True:
             payload = await self._gateway_ws.receive_json()
             op = payload[_OP]
+            assert isinstance(op, str)
 
             if op == _PONG:
                 now = time.monotonic()
@@ -329,12 +347,14 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
             else:
                 data = payload[_D]
+                assert isinstance(data, dict)
+
                 self._event_manager.consume_raw_event(op, self, data)
 
     async def _keep_alive(self, backoff: rate_limit_trait.RateLimiter) -> None:
         assert self._connection_event is not None
 
-        lifetime_tasks: typing.Tuple[asyncio.Task[typing.Any], ...] = ()
+        lifetime_tasks: tuple[asyncio.Task[typing.Any], ...] = ()
 
         while True:
             self._connection_event.clear()
@@ -368,7 +388,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
                 return
 
             except Exception as exc:
-                self._logger.error(
+                self._logger.exception(
                     "Encountered an unhandled error in communicating with the gateway.",
                     exc_info=exc,
                 )
@@ -384,14 +404,16 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
                 self._event_manager.dispatch(connection_events.DisconnectEvent())
 
-    async def _connect(self) -> typing.Tuple[asyncio.Task[typing.Any], ...]:
+    async def _connect(self) -> tuple[asyncio.Task[typing.Any], ...]:
         if self._gateway_ws is not None:
-            raise RuntimeError("This GatewayConnection is already connected with the gateway.")
+            msg = "This GatewayConnection is already connected with the gateway."
+            raise RuntimeError(msg)
 
         assert self._connection_event is not None
 
         self._gateway_ws = await GatewayWebsocket.connect(
-            logger=self._logger, url=self._gateway_url
+            logger=self._logger,
+            url=self._gateway_url,
         )
 
         heartbeat_interval = await self._poll_hello_event()
@@ -404,9 +426,8 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         try:
             await asyncio.wait_for(self._authenticated_event.wait(), timeout=10.0)
         except asyncio.TimeoutError:
-            raise errors.GatewayConnectionError(
-                "Failed to authenticate with the gateway."
-            ) from None
+            msg = "Failed to authenticate with the gateway."
+            raise errors.GatewayConnectionError(msg) from None
 
         # Indicate connection logic is done.
         self._connection_event.set()

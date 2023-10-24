@@ -33,9 +33,9 @@ class RESTClient(typing.Protocol):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         ...
 
@@ -61,16 +61,21 @@ class RESTClient(typing.Protocol):
     ) -> models.FileData:
         ...
 
-    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:  # noqa: A002
         ...
 
-    async def fetch_attachment(self, id: int) -> files.URL:
+    async def fetch_attachment(self, id: int) -> files.URL:  # noqa: A002
         ...
 
-    async def fetch_file_data_from_bucket(self, bucket: str, /, id: int) -> models.FileData:
+    async def fetch_file_data_from_bucket(
+        self,
+        bucket: str,
+        /,
+        id: int,  # noqa: A002
+    ) -> models.FileData:
         ...
 
-    async def fetch_attachment_data(self, id: int) -> models.FileData:
+    async def fetch_attachment_data(self, id: int) -> models.FileData:  # noqa: A002
         ...
 
     async def fetch_static_file(self, name: str) -> files.URL:
@@ -78,7 +83,7 @@ class RESTClient(typing.Protocol):
 
     # Instance.
 
-    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+    async def get_instance_info(self, *, rate_limits: bool = False) -> models.InstanceInfo:
         ...
 
     # Messaging.
@@ -89,11 +94,16 @@ class RESTClient(typing.Protocol):
     # Sessions
 
     async def create_session(
-        self, *, identifier: str, password: str, platform: str = ..., client: str = ...
-    ) -> typing.Tuple[str, models.Session]:
+        self,
+        *,
+        identifier: str,
+        password: str,
+        platform: str = ...,
+        client: str = ...,
+    ) -> tuple[str, models.Session]:
         ...
 
-    async def delete_session(self, *, id: int) -> None:
+    async def delete_session(self, *, id: int) -> None:  # noqa: A002
         ...
 
     async def get_sessions(self) -> typing.Sequence[models.Session]:
@@ -116,18 +126,18 @@ class RESTClient(typing.Protocol):
     async def get_self(self) -> models.User:
         ...
 
-    async def get_user(self, identifier: typing.Union[int, str], /) -> models.User:
+    async def get_user(self, identifier: int | str, /) -> models.User:
         ...
 
     async def update_profile(
         self,
         *,
-        display_name: typing.Optional[str] = None,
-        status: typing.Optional[str] = None,
-        status_type: typing.Optional[models.StatusType] = None,
-        bio: typing.Optional[str] = None,
-        avatar: typing.Optional[int] = None,
-        banner: typing.Optional[int] = None,
+        display_name: str | None = None,
+        status: str | None = None,
+        status_type: models.StatusType | None = None,
+        bio: str | None = None,
+        avatar: int | None = None,
+        banner: int | None = None,
     ) -> models.User:
         ...
 
@@ -135,9 +145,9 @@ class RESTClient(typing.Protocol):
         self,
         *,
         password: str,
-        username: typing.Optional[str] = None,
-        email: typing.Optional[str] = None,
-        new_password: typing.Optional[str] = None,
+        username: str | None = None,
+        email: str | None = None,
+        new_password: str | None = None,
     ) -> models.User:
         ...
 

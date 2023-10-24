@@ -1,6 +1,6 @@
 import typing
 
-from velum.api import gateway_trait as gateway_trait
+from velum.api import gateway_trait
 from velum.events import connection_events
 from velum.events import message_events
 from velum.events import user_events

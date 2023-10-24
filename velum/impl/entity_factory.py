@@ -20,7 +20,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
     def deserialize_instance_info(self, payload: data_binding.JSONObject) -> models.InstanceInfo:
         instance_name = typing.cast(str, payload["instance_name"])
         version = typing.cast(str, payload["version"])
-        description = typing.cast(typing.Optional[str], payload["description"])
+        description = typing.cast(str | None, payload["description"])
         message_limit = typing.cast(int, payload["message_limit"])
         oprish_url = typing.cast(str, payload["oprish_url"])
         pandemonium_url = typing.cast(str, payload["pandemonium_url"])
@@ -29,7 +29,8 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         attachment_file_size = typing.cast(int, payload["attachment_file_size"])
 
         rate_limits = typing.cast(
-            typing.Optional[data_binding.JSONObject], payload.get("rate_limits")
+            data_binding.JSONObject | None,
+            payload.get("rate_limits"),
         )
         if rate_limits is not None:
             rate_limits = self.deserialize_ratelimits(rate_limits)
@@ -61,13 +62,13 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         payload: data_binding.JSONObject,
     ) -> models.OprishRatelimits:
         info = self._deserialize_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["info"])
+            typing.cast(data_binding.JSONObject, payload["info"]),
         )
         message_create = self._deserialize_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["message_create"])
+            typing.cast(data_binding.JSONObject, payload["message_create"]),
         )
         ratelimits = self._deserialize_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["ratelimits"])
+            typing.cast(data_binding.JSONObject, payload["ratelimits"]),
         )
 
         return models.OprishRatelimits(
@@ -95,26 +96,26 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         payload: data_binding.JSONObject,
     ) -> models.EffisRatelimits:
         assets = self._deserialize_effis_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["assets"])
+            typing.cast(data_binding.JSONObject, payload["assets"]),
         )
         attachments = self._deserialize_effis_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["attachments"])
+            typing.cast(data_binding.JSONObject, payload["attachments"]),
         )
         fetch_file = self._deserialize_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["fetch_file"])
+            typing.cast(data_binding.JSONObject, payload["fetch_file"]),
         )
 
         return models.EffisRatelimits(assets=assets, attachments=attachments, fetch_file=fetch_file)
 
     def deserialize_ratelimits(self, payload: data_binding.JSONObject) -> models.InstanceRatelimits:
         oprish = self._deserialize_oprish_ratelimits(
-            typing.cast(data_binding.JSONObject, payload["oprish"])
+            typing.cast(data_binding.JSONObject, payload["oprish"]),
         )
         pandemonium = self._deserialize_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["pandemonium"])
+            typing.cast(data_binding.JSONObject, payload["pandemonium"]),
         )
         effis = self._deserialize_effis_ratelimits(
-            typing.cast(data_binding.JSONObject, payload["effis"])
+            typing.cast(data_binding.JSONObject, payload["effis"]),
         )
 
         return models.InstanceRatelimits(
@@ -125,30 +126,35 @@ class EntityFactory(entity_factory_trait.EntityFactory):
 
     def _deserialize_file_metadata(self, payload: data_binding.JSONObject) -> models.FileMetadata:
         type_ = typing.cast(str, payload["type"])
-        width = typing.cast(typing.Optional[int], payload.get("width"))
-        height = typing.cast(typing.Optional[int], payload.get("height"))
+        width = typing.cast(int | None, payload.get("width"))
+        height = typing.cast(int | None, payload.get("height"))
 
         return models.FileMetadata(type=type_, width=width, height=height)
 
     def deserialize_file_data(self, payload: data_binding.JSONObject) -> models.FileData:
-        id = typing.cast(int, payload["id"])
+        id_ = typing.cast(int, payload["id"])
         name = typing.cast(str, payload["name"])
         bucket = typing.cast(str, payload["bucket"])
-        spoiler = typing.cast(typing.Optional[bool], payload.get("spoiler"))
+        spoiler = typing.cast(bool | None, payload.get("spoiler"))
         metadata = self._deserialize_file_metadata(
-            typing.cast(data_binding.JSONObject, payload["metadata"])
+            typing.cast(data_binding.JSONObject, payload["metadata"]),
         )
 
         return models.FileData(
-            id=id, name=name, bucket=bucket, spoiler=bool(spoiler), metadata=metadata
+            id=id_,
+            name=name,
+            bucket=bucket,
+            spoiler=bool(spoiler),
+            metadata=metadata,
         )
 
     def _deserialize_pandemonium_config(
-        self, payload: data_binding.JSONObject
+        self,
+        payload: data_binding.JSONObject,
     ) -> models.PandemoniumConf:
         url = typing.cast(str, payload["url"])
         rate_limit = self._deserialize_ratelimit_config(
-            typing.cast(data_binding.JSONObject, payload["rate_limit"])
+            typing.cast(data_binding.JSONObject, payload["rate_limit"]),
         )
 
         return models.PandemoniumConf(url=url, rate_limit=rate_limit)
@@ -156,10 +162,10 @@ class EntityFactory(entity_factory_trait.EntityFactory):
     def deserialize_hello(self, payload: data_binding.JSONObject) -> models.Hello:
         heartbeat_interval = typing.cast(int, payload["heartbeat_interval"])
         instance_info = self.deserialize_instance_info(
-            typing.cast(data_binding.JSONObject, payload["instance_info"])
+            typing.cast(data_binding.JSONObject, payload["instance_info"]),
         )
         pandemonium_info = self._deserialize_pandemonium_config(
-            typing.cast(data_binding.JSONObject, payload["pandemonium_info"])
+            typing.cast(data_binding.JSONObject, payload["pandemonium_info"]),
         )
 
         return models.Hello(
@@ -174,22 +180,23 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         return models.RatelimitData(wait=wait)
 
     def deserialize_session_created(
-        self, payload: data_binding.JSONObject
-    ) -> typing.Tuple[str, models.Session]:
+        self,
+        payload: data_binding.JSONObject,
+    ) -> tuple[str, models.Session]:
         token = typing.cast(str, payload["token"])
         session = self.deserialize_session(typing.cast(data_binding.JSONObject, payload["session"]))
 
         return token, session
 
     def deserialize_session(self, payload: data_binding.JSONObject) -> models.Session:
-        id = typing.cast(int, payload["id"])
+        id_ = typing.cast(int, payload["id"])
         user_id = typing.cast(int, payload["user_id"])
         platform = typing.cast(str, payload["platform"])
         client = typing.cast(str, payload["client"])
         ip = typing.cast(str, payload["ip"])
 
         return models.Session(
-            id=id,
+            id=id_,
             user_id=user_id,
             platform=platform,
             client=client,
@@ -197,27 +204,27 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         )
 
     def _deserialize_status(self, payload: data_binding.JSONObject) -> models.Status:
-        type = typing.cast(str, payload["type"])
-        text = typing.cast(typing.Optional[str], payload.get("text"))
+        type_ = typing.cast(str, payload["type"])
+        text = typing.cast(str | None, payload.get("text"))
 
-        return models.Status(type=models.StatusType(type), text=text)
+        return models.Status(type=models.StatusType(type_), text=text)
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> models.User:
-        id = typing.cast(int, payload["id"])
+        id_ = typing.cast(int, payload["id"])
         username = typing.cast(str, payload["username"])
-        display_name = typing.cast(typing.Optional[str], payload.get("display_name"))
+        display_name = typing.cast(str | None, payload.get("display_name"))
         social_credit = typing.cast(int, payload["social_credit"])
         status = self._deserialize_status(typing.cast(data_binding.JSONObject, payload["status"]))
-        bio = typing.cast(typing.Optional[str], payload.get("bio"))
-        avatar = typing.cast(typing.Optional[int], payload.get("avatar"))
-        banner = typing.cast(typing.Optional[int], payload.get("banner"))
+        bio = typing.cast(str | None, payload.get("bio"))
+        avatar = typing.cast(int | None, payload.get("avatar"))
+        banner = typing.cast(int | None, payload.get("banner"))
         badges = typing.cast(int, payload["badges"])
         permissions = typing.cast(int, payload["permissions"])
-        email = typing.cast(typing.Optional[str], payload.get("email"))
-        verified = typing.cast(typing.Optional[bool], payload.get("verified"))
+        email = typing.cast(str | None, payload.get("email"))
+        verified = typing.cast(bool | None, payload.get("verified"))
 
         return models.User(
-            id=id,
+            id=id_,
             username=username,
             display_name=display_name,
             social_credit=social_credit,
@@ -233,12 +240,13 @@ class EntityFactory(entity_factory_trait.EntityFactory):
 
     def deserialize_authenticated(self, payload: data_binding.JSONObject) -> models.Authenticated:
         user = self.deserialize_user(typing.cast(data_binding.JSONObject, payload["user"]))
-        users = typing.cast(typing.List[models.User], payload["users"])
+        users = typing.cast(list[models.User], payload["users"])
 
         return models.Authenticated(user=user, users=users)
 
     def deserialize_presence_update(
-        self, payload: data_binding.JSONObject
+        self,
+        payload: data_binding.JSONObject,
     ) -> models.PresenceUpdate:
         user_id = typing.cast(int, payload["user_id"])
         status = self._deserialize_status(typing.cast(data_binding.JSONObject, payload["status"]))

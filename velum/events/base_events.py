@@ -14,7 +14,7 @@ EventT = typing.TypeVar("EventT", bound="Event")
 EventCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]
 
 
-_id_counter = 1
+_id_counter = 0
 
 
 class Event(abc.ABC):
@@ -23,7 +23,7 @@ class Event(abc.ABC):
     __slots__ = ()
 
     __bitmask: int
-    __dispatches: typing.Tuple[typing.Type[Event], ...]
+    __dispatches: tuple[type[Event], ...]
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -36,7 +36,7 @@ class Event(abc.ABC):
             # need to increment the bitmask again.
             return
 
-        global _id_counter  # NOTE: maybe make this a private attr? hmm...
+        global _id_counter  # noqa: PLW0603  # NOTE: maybe make this a private attr? hmm...
 
         # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
         # Non-event classes should be ignored.
@@ -50,14 +50,12 @@ class Event(abc.ABC):
 
     @class_utils.classproperty
     @classmethod
-    def dispatches(cls) -> typing.Tuple[typing.Type[Event], ...]:
+    def dispatches(cls) -> tuple[type[Event], ...]:
         return cls.__dispatches
 
 
 # Set event parameters on the actual event class.
-# These have to be ignored as we're accessing private attributes externally.
-Event._Event__dispatches = (Event,)  # pyright: ignore[reportGeneralTypeIssues]
-Event._Event__bitmask = 1 << 0  # pyright: ignore[reportGeneralTypeIssues]
+Event.__init_subclass__()
 
 
 @attr.define(kw_only=True, weakref_slot=False)

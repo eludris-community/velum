@@ -6,23 +6,25 @@ import time
 import typing
 
 from velum import traits
-from velum.api import entity_factory_trait
-from velum.api import event_factory_trait
-from velum.api import event_manager_trait
-from velum.api import gateway_trait
-from velum.api import rest_trait
-from velum.events import base_events
 from velum.impl import entity_factory
 from velum.impl import event_factory
 from velum.impl import event_manager
 from velum.impl import gateway
 from velum.impl import rest
 
+if typing.TYPE_CHECKING:
+    from velum.api import entity_factory_trait
+    from velum.api import event_factory_trait
+    from velum.api import event_manager_trait
+    from velum.api import gateway_trait
+    from velum.api import rest_trait
+    from velum.events import base_events
+
 __all__: typing.Sequence[str] = ("GatewayClient",)
 
 
 _T = typing.TypeVar("_T")
-_MaybeType = typing.Optional[typing.Type[_T]]
+_MaybeType = type[_T] | None
 
 
 _LOGGER = logging.getLogger("velum.client")
@@ -43,21 +45,21 @@ class GatewayClient(traits.GatewayClientAware):
     _event_manager: event_manager_trait.EventManager
     _rest: rest_trait.RESTClient
     _gateway: gateway_trait.GatewayHandler
-    _closing_event: typing.Optional[asyncio.Event]
+    _closing_event: asyncio.Event | None
 
     def __init__(
         self,
-        cdn_url: typing.Optional[str] = None,
-        gateway_url: typing.Optional[str] = None,
-        rest_url: typing.Optional[str] = None,
-        entity_factory_impl: typing.Optional[entity_factory_trait.EntityFactory] = None,
-        event_factory_impl: typing.Optional[event_factory_trait.EventFactory] = None,
-        event_manager_impl: typing.Optional[event_manager_trait.EventManager] = None,
-        gateway_impl: typing.Optional[gateway_trait.GatewayHandler] = None,
-        rest_client_impl: typing.Optional[rest_trait.RESTClient] = None,
+        cdn_url: str | None = None,
+        gateway_url: str | None = None,
+        rest_url: str | None = None,
+        entity_factory_impl: entity_factory_trait.EntityFactory | None = None,
+        event_factory_impl: event_factory_trait.EventFactory | None = None,
+        event_manager_impl: event_manager_trait.EventManager | None = None,
+        gateway_impl: gateway_trait.GatewayHandler | None = None,
+        rest_client_impl: rest_trait.RESTClient | None = None,
         *,
         token: str,
-    ):
+    ) -> None:
         self._entity_factory = (
             entity_factory_impl
             if entity_factory_impl is not None
@@ -91,16 +93,19 @@ class GatewayClient(traits.GatewayClientAware):
             gateway_impl
             if gateway_impl is not None
             else gateway.GatewayHandler(
-                gateway_url=gateway_url, event_manager=self._event_manager, token=token
+                gateway_url=gateway_url,
+                event_manager=self._event_manager,
+                token=token,
             )
         )
 
         # Setup state.
-        self._closing_event: typing.Optional[asyncio.Event] = None
+        self._closing_event: asyncio.Event | None = None
 
     async def start(self) -> None:
         if self._closing_event:
-            raise RuntimeError("Cannot start an already running client.")
+            msg = "Cannot start an already running client."
+            raise RuntimeError(msg)
 
         start_time = time.monotonic()
         self._closing_event = asyncio.Event()
@@ -117,7 +122,8 @@ class GatewayClient(traits.GatewayClientAware):
 
     async def close(self) -> None:
         if not self._closing_event:
-            raise RuntimeError("Cannot close an inactive client.")
+            msg = "Cannot close an inactive client."
+            raise RuntimeError(msg)
 
         if self._closing_event.is_set():
             return
@@ -131,13 +137,13 @@ class GatewayClient(traits.GatewayClientAware):
 
             try:
                 await future
-            except Exception as ex:
+            except Exception as ex:  # noqa: BLE001
                 loop.call_exception_handler(
                     {
                         "message": f"{name} raised an exception during shut down",
                         "future": future,
                         "exception": ex,
-                    }
+                    },
                 )
 
         await handle("gateway", self._gateway.close())
@@ -176,7 +182,7 @@ class GatewayClient(traits.GatewayClientAware):
 
     def get_listeners(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         *,
         polymorphic: bool = True,
@@ -184,7 +190,8 @@ class GatewayClient(traits.GatewayClientAware):
         return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
 
     def listen(
-        self, *event_types: typing.Type[base_events.EventT]
+        self,
+        *event_types: type[base_events.EventT],
     ) -> typing.Callable[
         [base_events.EventCallbackT[base_events.EventT]],
         base_events.EventCallbackT[base_events.EventT],
@@ -193,23 +200,23 @@ class GatewayClient(traits.GatewayClientAware):
 
     def subscribe(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         callback: base_events.EventCallbackT[base_events.EventT],
     ) -> None:
         self._event_manager.subscribe(event_type, callback)
 
     def unsubscribe(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         callback: base_events.EventCallbackT[base_events.EventT],
     ) -> None:
         self._event_manager.unsubscribe(event_type, callback)
 
     async def wait_for(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_manager_trait.EventPredicateT[base_events.EventT]] = None,
+        timeout: float | None,
+        predicate: event_manager_trait.EventPredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)

@@ -1,4 +1,5 @@
 import contextlib
+import sys
 import types
 import typing
 
@@ -30,16 +31,16 @@ class RESTClient(rest_trait.RESTClient):
         "_session",
     )
 
-    _session: typing.Optional[aiohttp.ClientSession]
+    _session: aiohttp.ClientSession | None
 
     def __init__(
         self,
         *,
-        cdn_url: typing.Optional[str] = None,
-        rest_url: typing.Optional[str] = None,
-        token: typing.Optional[str] = None,
-        entity_factory: typing.Optional[entity_factory_trait.EntityFactory] = None,
-    ):
+        cdn_url: str | None = None,
+        rest_url: str | None = None,
+        token: str | None = None,
+        entity_factory: entity_factory_trait.EntityFactory | None = None,
+    ) -> None:
         self._entity_factory = (
             entity_factory if entity_factory is not None else entity_factory_impl.EntityFactory()
         )
@@ -60,13 +61,15 @@ class RESTClient(rest_trait.RESTClient):
 
     def _assert_and_return_session(self) -> aiohttp.ClientSession:
         if self._session is None:
-            raise RuntimeError("Cannot use an inactive RESTClient.")
+            msg = "Cannot use an inactive RESTClient."
+            raise RuntimeError(msg)
 
         return self._session
 
     def start(self) -> None:
         if self._session is not None:
-            raise RuntimeError("Cannot start an already running RESTClient.")
+            msg = "Cannot start an already running RESTClient."
+            raise RuntimeError(msg)
 
         self._session = aiohttp.ClientSession(json_serialize=data_binding.dump_json)
 
@@ -80,9 +83,9 @@ class RESTClient(rest_trait.RESTClient):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         await self.close()
 
@@ -94,12 +97,12 @@ class RESTClient(rest_trait.RESTClient):
         self,
         route: routes.CompiledRoute,
         *,
-        json: typing.Optional[typing.Any] = None,
-        form_builder: typing.Optional[data_binding.FormBuilder] = None,
-        query: typing.Optional[typing.Mapping[str, str]] = None,
-    ):
+        json: data_binding.JSONObject | None = None,
+        form_builder: data_binding.FormBuilder | None = None,
+        query: typing.Mapping[str, str] | None = None,
+    ) -> data_binding.JSONish:
         url = self._complete_route(route)
-        headers: typing.Dict[str, str] = {}
+        headers: dict[str, str] = {}
 
         if route.requires_authentication is not None:
             # Does not require authentication, but is preferred (higher rate limit).
@@ -107,10 +110,12 @@ class RESTClient(rest_trait.RESTClient):
                 headers["Authorization"] = self._token
             elif route.requires_authentication:
                 if self._token is None:
-                    raise errors.HTTPError("Cannot use an authenticated route without a token.")
+                    msg = "Cannot use an authenticated route without a token."
+                    raise errors.HTTPError(msg)
 
                 headers["Authorization"] = self._token
 
+        response = None
         stack = contextlib.AsyncExitStack()
         async with stack:
             form = await form_builder.build(stack) if form_builder else None
@@ -124,18 +129,23 @@ class RESTClient(rest_trait.RESTClient):
                 headers=headers,
             )
 
-        if 200 <= response.status < 300:
+        if response is None:
+            _, exc, _ = sys.exc_info()
+            assert exc
+            raise exc
+
+        if 200 <= response.status < 300:  # noqa: PLR2004
             content_type = response.content_type
 
             if content_type == _APPLICATION_JSON:
                 return data_binding.load_json(await response.read())
 
             real_url = str(response.real_url)
-            raise errors.HTTPError(f"Expected JSON response. ({content_type=}, {real_url=})")
+            msg = f"Expected JSON response. (content_type={content_type!r}, real_url={real_url!r})"
+            raise errors.HTTPError(msg)
 
-        print(response.status, await response.read())
-
-        raise errors.HTTPError("get good lol")
+        msg = "get good lol"
+        raise errors.HTTPError(msg)
 
     # Ordered by docs.
     # Files.
@@ -167,21 +177,26 @@ class RESTClient(rest_trait.RESTClient):
     ) -> models.FileData:
         return await self.upload_to_bucket("attachments", attachment, spoiler=spoiler)
 
-    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:  # noqa: A002
         url = self._complete_route(routes.GET_FILE.compile(bucket=bucket, id=id))
         return files.URL(url)
 
-    async def fetch_attachment(self, id: int) -> files.URL:
+    async def fetch_attachment(self, id: int) -> files.URL:  # noqa: A002
         return await self.fetch_file_from_bucket("attachments", id)
 
-    async def fetch_file_data_from_bucket(self, bucket: str, /, id: int) -> models.FileData:
+    async def fetch_file_data_from_bucket(
+        self,
+        bucket: str,
+        /,
+        id: int,  # noqa: A002
+    ) -> models.FileData:
         route = routes.GET_FILE_INFO.compile(bucket=bucket, id=id)
 
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_file_data(response)
 
-    async def fetch_attachment_data(self, id: int) -> models.FileData:
+    async def fetch_attachment_data(self, id: int) -> models.FileData:  # noqa: A002
         return await self.fetch_file_data_from_bucket("attachments", id)
 
     async def fetch_static_file(self, name: str) -> files.URL:
@@ -190,7 +205,7 @@ class RESTClient(rest_trait.RESTClient):
 
     # Instance.
 
-    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+    async def get_instance_info(self, *, rate_limits: bool = False) -> models.InstanceInfo:
         query = {"ratelimits": "1"} if rate_limits else {}
         response = await self._request(routes.GET_INFO.compile(), query=query)
         assert isinstance(response, dict)
@@ -207,8 +222,13 @@ class RESTClient(rest_trait.RESTClient):
     # Sessions
 
     async def create_session(
-        self, *, identifier: str, password: str, platform: str = "python", client: str = "velum"
-    ) -> typing.Tuple[str, models.Session]:
+        self,
+        *,
+        identifier: str,
+        password: str,
+        platform: str = "python",
+        client: str = "velum",
+    ) -> tuple[str, models.Session]:
         body = {
             "identifier": identifier,
             "password": password,
@@ -219,7 +239,7 @@ class RESTClient(rest_trait.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_session_created(response)
 
-    async def delete_session(self, *, id: int) -> None:
+    async def delete_session(self, *, id: int) -> None:  # noqa: A002
         await self._request(routes.DELETE_SESSION.compile(id=id))
 
     async def get_sessions(self) -> typing.Sequence[models.Session]:
@@ -253,7 +273,7 @@ class RESTClient(rest_trait.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_user(response)
 
-    async def get_user(self, identifier: typing.Union[int, str], /) -> models.User:
+    async def get_user(self, identifier: int | str, /) -> models.User:
         response = await self._request(routes.GET_USER.compile(identifier=identifier))
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_user(response)
@@ -261,12 +281,12 @@ class RESTClient(rest_trait.RESTClient):
     async def update_profile(
         self,
         *,
-        display_name: typing.Optional[str] = None,
-        status: typing.Optional[str] = None,
-        status_type: typing.Optional[models.StatusType] = None,
-        bio: typing.Optional[str] = None,
-        avatar: typing.Optional[int] = None,
-        banner: typing.Optional[int] = None,
+        display_name: str | None = None,
+        status: str | None = None,
+        status_type: models.StatusType | None = None,
+        bio: str | None = None,
+        avatar: int | None = None,
+        banner: int | None = None,
     ) -> models.User:
         body = {
             "display_name": display_name,
@@ -284,9 +304,9 @@ class RESTClient(rest_trait.RESTClient):
         self,
         *,
         password: str,
-        username: typing.Optional[str] = None,
-        email: typing.Optional[str] = None,
-        new_password: typing.Optional[str] = None,
+        username: str | None = None,
+        email: str | None = None,
+        new_password: str | None = None,
     ) -> models.User:
         body = {
             "password": password,

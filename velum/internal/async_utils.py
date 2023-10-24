@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import inspect
 import typing
 
@@ -15,8 +16,9 @@ _T = typing.TypeVar("_T")
 
 
 def create_completed_future(
-    result: typing.Optional[_T] = None, /
-) -> asyncio.Future[typing.Optional[_T]]:
+    result: _T | None = None,
+    /,
+) -> asyncio.Future[_T | None]:
     future = asyncio.get_running_loop().create_future()
     future.set_result(result)
     return future
@@ -26,33 +28,46 @@ async def cancel_futures(futures: typing.Iterable[asyncio.Future[typing.Any]]) -
     for future in futures:
         if not future.done() and not future.cancelled():
             future.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await future
-            except asyncio.CancelledError:
-                pass
 
 
 async def first_completed(
     *awaitables: typing.Awaitable[typing.Any],
-    timeout: typing.Optional[float] = None,
+    timeout: float | None = None,
 ) -> None:
     futures = tuple(map(asyncio.ensure_future, awaitables))
     iter_ = asyncio.as_completed(futures, timeout=timeout)
 
     try:
         await next(iter_)
-    except Exception:
-        raise
     finally:
         await cancel_futures(futures)
 
 
-def is_async_iterator(obj: typing.Any) -> typing.TypeGuard[typing.AsyncIterator[object]]:
+def is_async_iterator(obj: object) -> typing.TypeGuard[typing.AsyncIterator[object]]:
     """Determine if the object is an async iterator or not."""
     return asyncio.iscoroutinefunction(getattr(obj, "__anext__", None))
 
 
-def is_async_iterable(obj: typing.Any) -> typing.TypeGuard[typing.AsyncIterable[object]]:
+def is_async_iterable(obj: object) -> typing.TypeGuard[typing.AsyncIterable[object]]:
     """Determine if the object is an async iterable or not."""
     attr = getattr(obj, "__aiter__", None)
     return inspect.isfunction(attr) or inspect.ismethod(attr)
+
+
+_tasks: set[asyncio.Task[typing.Any]] = set()
+
+
+def safe_task(
+    coroutine: typing.Coroutine[typing.Any, typing.Any, typing.Any],
+    *,
+    name: str | None = None,
+) -> asyncio.Task[typing.Any]:
+    """Create an asyncio background task without risk of it being GC'd."""
+    task = asyncio.create_task(coroutine, name=name)
+
+    _tasks.add(task)
+    task.add_done_callback(_tasks.discard)
+
+    return task

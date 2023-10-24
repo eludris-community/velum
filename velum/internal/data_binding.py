@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-import concurrent.futures
-import contextlib
 import enum
 import importlib
 import typing
 
 import aiohttp
-import typing_extensions
 
-from velum import files
+if typing.TYPE_CHECKING:
+    import concurrent.futures
+    import contextlib
+
+    import typing_extensions
+
+    from velum import files
 
 __all__: typing.Sequence[str] = (
     "JSONish",
@@ -60,7 +63,7 @@ def load_json(_: typing.AnyStr, /) -> JSONish:
     raise NotImplementedError
 
 
-JSONDecodeError: typing.Type[Exception] = Exception
+JSONDecodeError: type[Exception] = Exception
 """Exception raised when loading an invalid JSON string"""
 
 
@@ -86,28 +89,29 @@ def set_json_impl(*, impl: JSONImpl) -> None:
 def set_json_impl(
     loader: _JSONLoader,
     dumper: _JSONDumper,
-    error: typing.Type[Exception],
+    error: type[Exception],
     /,
 ) -> None:
     ...
 
 
 def set_json_impl(
-    loader: typing.Optional[_JSONLoader] = None,
-    dumper: typing.Optional[_JSONDumper] = None,
-    error: typing.Optional[typing.Type[Exception]] = None,
+    loader: _JSONLoader | None = None,
+    dumper: _JSONDumper | None = None,
+    error: type[Exception] | None = None,
     /,
     *,
-    impl: typing.Optional[JSONImpl] = None,
+    impl: JSONImpl | None = None,
 ) -> None:
     if (not (loader and dumper and error) and not impl) or ((loader or dumper or error) and impl):
-        raise ValueError(
+        msg = (
             "Please provide either:"
             "\n- All of `loader`, `dumper` and `error`,"
             "\n- only `implementation`."
         )
+        raise ValueError(msg)
 
-    global dump_json, load_json, JSONDecodeError
+    global dump_json, load_json, JSONDecodeError  # noqa: PLW0603
 
     if loader and dumper and error:
         load_json = loader
@@ -122,16 +126,18 @@ def set_json_impl(
         JSONDecodeError = json.JSONDecodeError
         return
 
-    elif impl is JSONImpl.ORJSON:
+    if impl is JSONImpl.ORJSON:
         try:
             orjson = importlib.import_module("orjson")
 
         except ImportError as exc:
-            raise ImportError(
-                "Cannot set 'orjson' as velum's JSON implementation, as you seem to not"
-                " have it installed.\nPlease install orjson and try again."
-                " Alternatively, orjson comes installed with 'velum[speedups]'."
-            ) from exc
+            msg = (
+                "Cannot set 'orjson' as velum's JSON implementation, as you"
+                " seem to not have it installed."
+                "\nPlease install orjson and try again. Alternatively, orjson"
+                " comes installed with 'velum[speedups]'."
+            )
+            raise ImportError(msg) from exc
 
         else:
             load_json = orjson.loads
@@ -139,10 +145,11 @@ def set_json_impl(
             JSONDecodeError = orjson.JSONDecodeError
             return
 
-    raise TypeError(
+    msg = (
         "Incorrect values have been passed, and led to an unexpected result."
         " Please double-check your input."
     )
+    raise TypeError(msg)
 
 
 # Set the stdlib `json` module as the default implementation
@@ -158,17 +165,17 @@ class FormBuilder:
 
     __slots__: typing.Sequence[str] = ("_executor", "_fields", "_resources")
 
-    def __init__(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> None:
+    def __init__(self, executor: concurrent.futures.Executor | None = None) -> None:
         self._executor = executor
-        self._fields: typing.List[typing.Tuple[str, str, typing.Optional[str]]] = []
-        self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
+        self._fields: list[tuple[str, str, str | None]] = []
+        self._resources: list[tuple[str, files.Resource[files.AsyncReader]]] = []
 
     def add_field(
         self,
         name: str,
         data: str,
         *,
-        content_type: typing.Optional[str] = None,
+        content_type: str | None = None,
     ) -> typing_extensions.Self:
         self._fields.append((name, data, content_type))
         return self

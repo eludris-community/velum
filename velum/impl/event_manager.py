@@ -14,7 +14,7 @@ __all__: typing.Sequence[str] = ("EventManager",)
 class EventManager(event_manager_base.EventManagerBase):
     __slots__ = ("_event_factory",)
 
-    def __init__(self, event_factory: event_factory_trait.EventFactory):
+    def __init__(self, event_factory: event_factory_trait.EventFactory) -> None:
         super().__init__()
         self._event_factory = event_factory
 
@@ -25,7 +25,7 @@ class EventManager(event_manager_base.EventManagerBase):
         payload: data_binding.JSONObject,
     ) -> None:
         await self.dispatch(
-            self._event_factory.deserialize_message_create_event(gateway_connection, payload)
+            self._event_factory.deserialize_message_create_event(gateway_connection, payload),
         )
 
     @event_manager_base.is_consumer_for(connection_events.HelloEvent)
@@ -35,7 +35,7 @@ class EventManager(event_manager_base.EventManagerBase):
         payload: data_binding.JSONObject,
     ) -> None:
         await self.dispatch(
-            self._event_factory.deserialize_hello_event(gateway_connection, payload)
+            self._event_factory.deserialize_hello_event(gateway_connection, payload),
         )
 
     @event_manager_base.is_consumer_for(connection_events.RatelimitEvent)
@@ -45,7 +45,7 @@ class EventManager(event_manager_base.EventManagerBase):
         payload: data_binding.JSONObject,
     ) -> None:
         await self.dispatch(
-            self._event_factory.deserialize_ratelimit_event(gateway_connection, payload)
+            self._event_factory.deserialize_ratelimit_event(gateway_connection, payload),
         )
 
     @event_manager_base.is_consumer_for(connection_events.AuthenticatedEvent)
@@ -55,7 +55,7 @@ class EventManager(event_manager_base.EventManagerBase):
         payload: data_binding.JSONObject,
     ) -> None:
         await self.dispatch(
-            self._event_factory.deserialize_authenticated_event(gateway_connection, payload)
+            self._event_factory.deserialize_authenticated_event(gateway_connection, payload),
         )
 
     @event_manager_base.is_consumer_for(user_events.UserUpdateEvent)
@@ -65,7 +65,7 @@ class EventManager(event_manager_base.EventManagerBase):
         payload: data_binding.JSONObject,
     ) -> None:
         await self.dispatch(
-            self._event_factory.deserialize_user_update_event(gateway_connection, payload)
+            self._event_factory.deserialize_user_update_event(gateway_connection, payload),
         )
 
     @event_manager_base.is_consumer_for(user_events.PresenceUpdateEvent)
@@ -75,5 +75,5 @@ class EventManager(event_manager_base.EventManagerBase):
         payload: data_binding.JSONObject,
     ) -> None:
         await self.dispatch(
-            self._event_factory.deserialize_presence_update_event(gateway_connection, payload)
+            self._event_factory.deserialize_presence_update_event(gateway_connection, payload),
         )

@@ -28,26 +28,30 @@ class EventManager(typing.Protocol):
 
     def subscribe(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         callback: base_events.EventCallbackT[base_events.EventT],
     ) -> None:
         ...
 
     def unsubscribe(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         callback: base_events.EventCallbackT[base_events.EventT],
     ) -> None:
         ...
 
     def get_listeners(
-        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
+        self,
+        event_type: type[base_events.EventT],
+        /,
+        *,
+        polymorphic: bool = True,
     ) -> typing.Collection[base_events.EventCallbackT[base_events.EventT]]:
         ...
 
     def listen(
         self,
-        *event_types: typing.Type[base_events.EventT],
+        *event_types: type[base_events.EventT],
     ) -> typing.Callable[
         [base_events.EventCallbackT[base_events.EventT]],
         base_events.EventCallbackT[base_events.EventT],
@@ -56,10 +60,10 @@ class EventManager(typing.Protocol):
 
     async def wait_for(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         *,
-        timeout: typing.Optional[float | int] = None,
-        predicate: typing.Optional[EventPredicateT[base_events.EventT]] = None,
+        timeout: float | None = None,
+        predicate: EventPredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         ...

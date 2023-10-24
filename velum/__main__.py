@@ -1,11 +1,10 @@
 import argparse
 import asyncio
-import typing
 
 import velum
 
 
-async def create_password(username: str, password: str, url: typing.Optional[str]) -> str:
+async def create_password(username: str, password: str, url: str | None) -> str:
     async with velum.RESTClient(rest_url=url) as client:
         token, _ = await client.create_session(
             identifier=username,
