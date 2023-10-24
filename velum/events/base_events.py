@@ -14,7 +14,7 @@ EventT = typing.TypeVar("EventT", bound="Event")
 EventCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]
 
 
-_id_counter = 1
+_id_counter = 0
 
 
 class Event(abc.ABC):
@@ -55,9 +55,7 @@ class Event(abc.ABC):
 
 
 # Set event parameters on the actual event class.
-# These have to be ignored as we're accessing private attributes externally.
-Event._Event__dispatches = (Event,)  # pyright: ignore[reportGeneralTypeIssues]
-Event._Event__bitmask = 1 << 0  # pyright: ignore[reportGeneralTypeIssues]
+Event.__init_subclass__()
 
 
 @attr.define(kw_only=True, weakref_slot=False)

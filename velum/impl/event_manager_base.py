@@ -209,7 +209,7 @@ class EventManagerBase(event_manager_trait.EventManager):
     ) -> None:
         try:
             await callback(event)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             exc_info = type(exc), exc, exc.__traceback__.tb_next if exc.__traceback__ else None
             if _is_exception_event(event):
                 _LOGGER.exception(
@@ -253,7 +253,8 @@ class EventManagerBase(event_manager_trait.EventManager):
         except asyncio.CancelledError:
             # Can be safely skipped, most likely caused by shutting down event loop.
             return
-        except BaseException as exc:
+        # TODO: Figure out if this can be Exception
+        except BaseException as exc:  # noqa: BLE001
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "An exception occurred while dispatching raw event.",
@@ -294,7 +295,7 @@ class EventManagerBase(event_manager_trait.EventManager):
             _LOGGER.warning("Unhandled event: %r", event_name.lower())
             return
 
-        asyncio.create_task(
+        async_utils.safe_task(
             self._handle_consumption(consumer, gateway_connection, payload),
             name=f"dispatch {event_name}",
         )
@@ -304,7 +305,7 @@ class EventManagerBase(event_manager_trait.EventManager):
 
         for cls in event.dispatches:
             for callback in self._listeners.get(cls, ()):
-                tasks.append(self._invoke_callback(callback, event))
+                tasks.append(self._invoke_callback(callback, event))  # noqa: PERF401
 
             if cls not in self._waiters:
                 continue
@@ -316,7 +317,7 @@ class EventManagerBase(event_manager_trait.EventManager):
                     try:
                         if predicate and not predicate(event):
                             continue
-                    except Exception as ex:
+                    except Exception as ex:  # noqa: BLE001
                         future.set_exception(ex)
                     else:
                         future.set_result(event)

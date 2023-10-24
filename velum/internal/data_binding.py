@@ -126,7 +126,7 @@ def set_json_impl(
         JSONDecodeError = json.JSONDecodeError
         return
 
-    elif impl is JSONImpl.ORJSON:
+    if impl is JSONImpl.ORJSON:
         try:
             orjson = importlib.import_module("orjson")
 

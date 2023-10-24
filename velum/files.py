@@ -86,7 +86,7 @@ def ensure_resource(
     if isinstance(data, Resource):
         return data
 
-    elif isinstance(data, RawData):
+    if isinstance(data, RawData):
         if not filename:
             filename = uuid.uuid4().hex
 
@@ -416,7 +416,7 @@ class URL(Resource[WebReader]):
     @property
     def filename(self) -> str:
         url = urllib.parse.urlparse(self._url)
-        return os.path.basename(url.path)
+        return pathlib.Path(url.path).name
 
     def stream(
         self,

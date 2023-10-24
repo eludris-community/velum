@@ -137,8 +137,6 @@ class RESTClient(rest_trait.RESTClient):
             msg = f"Expected JSON response. (content_type={content_type!r}, real_url={real_url!r})"
             raise errors.HTTPError(msg)
 
-        print(response.status, await response.read())
-
         msg = "get good lol"
         raise errors.HTTPError(msg)
 

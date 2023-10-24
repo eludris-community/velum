@@ -137,7 +137,7 @@ class GatewayClient(traits.GatewayClientAware):
 
             try:
                 await future
-            except Exception as ex:
+            except Exception as ex:  # noqa: BLE001
                 loop.call_exception_handler(
                     {
                         "message": f"{name} raised an exception during shut down",

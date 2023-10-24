@@ -107,7 +107,7 @@ class GatewayWebsocket:
 
             if isinstance(exc, aiohttp.ClientConnectionError | aiohttp.ClientResponseError):
                 raise errors.GatewayConnectionError(str(exc)) from None
-            elif isinstance(exc, asyncio.TimeoutError):
+            if isinstance(exc, asyncio.TimeoutError):
                 msg = "Connection timed out."
                 raise errors.GatewayConnectionError(msg) from None
 

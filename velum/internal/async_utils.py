@@ -54,3 +54,20 @@ def is_async_iterable(obj: object) -> typing.TypeGuard[typing.AsyncIterable[obje
     """Determine if the object is an async iterable or not."""
     attr = getattr(obj, "__aiter__", None)
     return inspect.isfunction(attr) or inspect.ismethod(attr)
+
+
+_tasks: set[asyncio.Task[typing.Any]] = set()
+
+
+def safe_task(
+    coroutine: typing.Coroutine[typing.Any, typing.Any, typing.Any],
+    *,
+    name: str | None = None,
+) -> asyncio.Task[typing.Any]:
+    """Create an asyncio background task without risk of it being GC'd."""
+    task = asyncio.create_task(coroutine, name=name)
+
+    _tasks.add(task)
+    task.add_done_callback(_tasks.discard)
+
+    return task

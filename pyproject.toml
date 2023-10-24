@@ -84,6 +84,8 @@ ignore = [
     "S101",
     # Low argument counts are hard to deal with for api wrappers.
     "PLR0913",
+    # We do not need cryptographically secure randomisation on our heartbeat :).
+    "S311",
     # TODO: Finish documentation and remove these rules.
     "D",
 ]
