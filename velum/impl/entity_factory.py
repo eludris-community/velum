@@ -132,7 +132,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         return models.FileMetadata(type=type_, width=width, height=height)
 
     def deserialize_file_data(self, payload: data_binding.JSONObject) -> models.FileData:
-        id = typing.cast(int, payload["id"])
+        id_ = typing.cast(int, payload["id"])
         name = typing.cast(str, payload["name"])
         bucket = typing.cast(str, payload["bucket"])
         spoiler = typing.cast(bool | None, payload.get("spoiler"))
@@ -141,7 +141,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         )
 
         return models.FileData(
-            id=id,
+            id=id_,
             name=name,
             bucket=bucket,
             spoiler=bool(spoiler),
@@ -189,14 +189,14 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         return token, session
 
     def deserialize_session(self, payload: data_binding.JSONObject) -> models.Session:
-        id = typing.cast(int, payload["id"])
+        id_ = typing.cast(int, payload["id"])
         user_id = typing.cast(int, payload["user_id"])
         platform = typing.cast(str, payload["platform"])
         client = typing.cast(str, payload["client"])
         ip = typing.cast(str, payload["ip"])
 
         return models.Session(
-            id=id,
+            id=id_,
             user_id=user_id,
             platform=platform,
             client=client,
@@ -204,13 +204,13 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         )
 
     def _deserialize_status(self, payload: data_binding.JSONObject) -> models.Status:
-        type = typing.cast(str, payload["type"])
+        type_ = typing.cast(str, payload["type"])
         text = typing.cast(str | None, payload.get("text"))
 
-        return models.Status(type=models.StatusType(type), text=text)
+        return models.Status(type=models.StatusType(type_), text=text)
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> models.User:
-        id = typing.cast(int, payload["id"])
+        id_ = typing.cast(int, payload["id"])
         username = typing.cast(str, payload["username"])
         display_name = typing.cast(str | None, payload.get("display_name"))
         social_credit = typing.cast(int, payload["social_credit"])
@@ -224,7 +224,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         verified = typing.cast(bool | None, payload.get("verified"))
 
         return models.User(
-            id=id,
+            id=id_,
             username=username,
             display_name=display_name,
             social_credit=social_credit,

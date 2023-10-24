@@ -172,21 +172,26 @@ class RESTClient(rest_trait.RESTClient):
     ) -> models.FileData:
         return await self.upload_to_bucket("attachments", attachment, spoiler=spoiler)
 
-    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:  # noqa: A002
         url = self._complete_route(routes.GET_FILE.compile(bucket=bucket, id=id))
         return files.URL(url)
 
-    async def fetch_attachment(self, id: int) -> files.URL:
+    async def fetch_attachment(self, id: int) -> files.URL:  # noqa: A002
         return await self.fetch_file_from_bucket("attachments", id)
 
-    async def fetch_file_data_from_bucket(self, bucket: str, /, id: int) -> models.FileData:
+    async def fetch_file_data_from_bucket(
+        self,
+        bucket: str,
+        /,
+        id: int,  # noqa: A002
+    ) -> models.FileData:
         route = routes.GET_FILE_INFO.compile(bucket=bucket, id=id)
 
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_file_data(response)
 
-    async def fetch_attachment_data(self, id: int) -> models.FileData:
+    async def fetch_attachment_data(self, id: int) -> models.FileData:  # noqa: A002
         return await self.fetch_file_data_from_bucket("attachments", id)
 
     async def fetch_static_file(self, name: str) -> files.URL:
@@ -229,7 +234,7 @@ class RESTClient(rest_trait.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_session_created(response)
 
-    async def delete_session(self, *, id: int) -> None:
+    async def delete_session(self, *, id: int) -> None:  # noqa: A002
         await self._request(routes.DELETE_SESSION.compile(id=id))
 
     async def get_sessions(self) -> typing.Sequence[models.Session]:

@@ -61,16 +61,21 @@ class RESTClient(typing.Protocol):
     ) -> models.FileData:
         ...
 
-    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:
+    async def fetch_file_from_bucket(self, bucket: str, /, id: int) -> files.URL:  # noqa: A002
         ...
 
-    async def fetch_attachment(self, id: int) -> files.URL:
+    async def fetch_attachment(self, id: int) -> files.URL:  # noqa: A002
         ...
 
-    async def fetch_file_data_from_bucket(self, bucket: str, /, id: int) -> models.FileData:
+    async def fetch_file_data_from_bucket(
+        self,
+        bucket: str,
+        /,
+        id: int,  # noqa: A002
+    ) -> models.FileData:
         ...
 
-    async def fetch_attachment_data(self, id: int) -> models.FileData:
+    async def fetch_attachment_data(self, id: int) -> models.FileData:  # noqa: A002
         ...
 
     async def fetch_static_file(self, name: str) -> files.URL:
@@ -98,7 +103,7 @@ class RESTClient(typing.Protocol):
     ) -> tuple[str, models.Session]:
         ...
 
-    async def delete_session(self, *, id: int) -> None:
+    async def delete_session(self, *, id: int) -> None:  # noqa: A002
         ...
 
     async def get_sessions(self) -> typing.Sequence[models.Session]:
