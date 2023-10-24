@@ -97,6 +97,10 @@ convention = "numpy"
     # Allow re-exporting modules.
     "PLC0414",
 ]
+"__main__.py" = [
+    # Allow printing in scripts.
+    "T201",
+]
 
 [tool.ruff.isort]
 force-single-line = true
