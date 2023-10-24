@@ -19,7 +19,7 @@ class ExponentialBackoff(rate_limit_trait.RateLimiter):
         base: float = 2.0,
         maximum: float = 60.0,
         initial_increment: int = 0,
-    ):
+    ) -> None:
         self.base = base
         self.maximum = maximum
         self.increment = self._initial_increment = initial_increment

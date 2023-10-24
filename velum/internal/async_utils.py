@@ -47,12 +47,12 @@ async def first_completed(
         await cancel_futures(futures)
 
 
-def is_async_iterator(obj: typing.Any) -> typing.TypeGuard[typing.AsyncIterator[object]]:
+def is_async_iterator(obj: object) -> typing.TypeGuard[typing.AsyncIterator[object]]:
     """Determine if the object is an async iterator or not."""
     return asyncio.iscoroutinefunction(getattr(obj, "__anext__", None))
 
 
-def is_async_iterable(obj: typing.Any) -> typing.TypeGuard[typing.AsyncIterable[object]]:
+def is_async_iterable(obj: object) -> typing.TypeGuard[typing.AsyncIterable[object]]:
     """Determine if the object is an async iterable or not."""
     attr = getattr(obj, "__aiter__", None)
     return inspect.isfunction(attr) or inspect.ismethod(attr)

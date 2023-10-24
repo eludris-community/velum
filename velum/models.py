@@ -256,7 +256,7 @@ class Session:
     """The IP address the session was created from."""
 
 
-class StatusType(Enum):
+class StatusType(str, Enum):
     """Represents the type of a status."""
 
     ONLINE = "ONLINE"

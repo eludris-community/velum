@@ -90,22 +90,22 @@ class Consumer(typing.Generic[_EventManagerT]):
     def __get__(
         self,
         instance: _BoundConsumer[_EventManagerT],
-        owner: type[typing.Any],
+        owner: type,
     ) -> Consumer[_EventManagerT]:
         ...
 
     @typing.overload
     def __get__(
         self,
-        instance: typing.Any,
-        owner: type[typing.Any],
+        instance: object,
+        owner: type,
     ) -> _BoundConsumer[_EventManagerT]:
         ...
 
     def __get__(
         self,
         instance: typing.Any | None,
-        owner: type[typing.Any],
+        owner: type,
     ) -> _BoundConsumer[_EventManagerT] | Consumer[_EventManagerT]:
         if instance is None or isinstance(instance, _BoundConsumer):
             return self
@@ -122,8 +122,8 @@ def is_consumer_for(
         {
             subtype
             for event_type in event_types
-            for subtype in event_type.dispatches
-        },  # fmt: skip
+            for subtype in event_type.dispatches  # fmt: skip
+        },
     )
 
     bitmask = 0
@@ -236,7 +236,7 @@ class EventManagerBase(event_manager_trait.EventManager):
         consumer: _BoundConsumer[typing_extensions.Self],
         gateway_connection: gateway_trait.GatewayHandler,
         payload: data_binding.JSONObject,
-    ):
+    ) -> None:
         if not consumer.is_enabled:
             _LOGGER.debug(
                 "Skipping raw dispatch for event '%s' because it has no registered listeners.",

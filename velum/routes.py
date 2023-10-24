@@ -37,7 +37,7 @@ class Route:
 
     requires_authentication: bool | None = attr.field(default=None)
 
-    def compile(self, **url_params: typing.Any) -> CompiledRoute:
+    def compile(self, **url_params: object) -> CompiledRoute:
         return CompiledRoute(
             self,
             self.path_template.format_map(url_params),

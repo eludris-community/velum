@@ -96,10 +96,10 @@ class RESTClient(rest_trait.RESTClient):
         self,
         route: routes.CompiledRoute,
         *,
-        json: typing.Any | None = None,
+        json: data_binding.JSONObject | None = None,
         form_builder: data_binding.FormBuilder | None = None,
         query: typing.Mapping[str, str] | None = None,
-    ):
+    ) -> data_binding.JSONish:
         url = self._complete_route(route)
         headers: dict[str, str] = {}
 

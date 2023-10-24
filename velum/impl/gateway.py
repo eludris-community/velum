@@ -31,7 +31,7 @@ if typing.TYPE_CHECKING:
         data: str | bytes | None
         extra: str | None
 
-        def json(self, loads: typing.Callable[[typing.Any], typing.Any] = ...) -> typing.Any:
+        def json(self, loads: typing.Callable[[typing.Any], typing.Any] = ...) -> typing.Any:  # noqa: ANN401
             ...
 
 
@@ -141,13 +141,16 @@ class GatewayWebsocket:
 
         await self._ws.send_str(payload)
 
-    async def receive_json(self) -> typing.Any:
+    async def receive_json(self) -> data_binding.JSONObject:
         payload = await self._receive_and_validate_text()
 
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("Received payload with size %s:\n\t%s", len(payload), payload)
 
-        return data_binding.load_json(payload)
+        data = data_binding.load_json(payload)
+        assert isinstance(data, dict)
+
+        return data
 
     async def _receive_and_validate_text(self) -> str:
         message = typing.cast("_WSMessage", await self._ws.receive())
@@ -307,6 +310,8 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         assert self._connection_event is not None
 
         payload = await self._gateway_ws.receive_json()
+        assert isinstance(payload, dict)
+
         op = payload[_OP]
 
         if op != _HELLO:
@@ -320,9 +325,12 @@ class GatewayHandler(gateway_trait.GatewayHandler):
             msg = f"Expected opcode {_HELLO}, received {op} instead."
             raise RuntimeError(msg)
 
+        data = typing.cast(data_binding.JSONObject, payload[_D])
+        heartbeat_interval = typing.cast(float, data["heartbeat_interval"])  # in ms
+
         # TODO: Maybe return fully deserialised event and use ratelimit info.
         #       For now, only using the heartbeat interval will do.
-        return float(payload[_D]["heartbeat_interval"]) / 1_000.0
+        return heartbeat_interval / 1_000.0
 
     async def _poll_events(self) -> None:
         assert self._gateway_ws is not None
@@ -331,6 +339,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         while True:
             payload = await self._gateway_ws.receive_json()
             op = payload[_OP]
+            assert isinstance(op, str)
 
             if op == _PONG:
                 now = time.monotonic()
@@ -340,6 +349,8 @@ class GatewayHandler(gateway_trait.GatewayHandler):
 
             else:
                 data = payload[_D]
+                assert isinstance(data, dict)
+
                 self._event_manager.consume_raw_event(op, self, data)
 
     async def _keep_alive(self, backoff: rate_limit_trait.RateLimiter) -> None:
