@@ -1,4 +1,5 @@
 import contextlib
+import sys
 import types
 import typing
 
@@ -114,6 +115,7 @@ class RESTClient(rest_trait.RESTClient):
 
                 headers["Authorization"] = self._token
 
+        response = None
         stack = contextlib.AsyncExitStack()
         async with stack:
             form = await form_builder.build(stack) if form_builder else None
@@ -126,6 +128,11 @@ class RESTClient(rest_trait.RESTClient):
                 data=form,
                 headers=headers,
             )
+
+        if response is None:
+            _, exc, _ = sys.exc_info()
+            assert exc
+            raise exc
 
         if 200 <= response.status < 300:  # noqa: PLR2004
             content_type = response.content_type

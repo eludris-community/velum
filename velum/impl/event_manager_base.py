@@ -200,7 +200,7 @@ class EventManagerBase(event_manager_trait.EventManager):
             if not isinstance(member, _BoundConsumer):
                 continue
 
-            self._consumers[event_name] = member
+            self._consumers[event_name] = member  # pyright: ignore
 
     async def _invoke_callback(
         self,
@@ -454,14 +454,13 @@ class EventManagerBase(event_manager_trait.EventManager):
         predicate: event_manager_trait.EventPredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
-        waiter_set: typing.MutableSet[_WaiterPairT[base_events.Event]]
 
         assert issubclass(event_type, base_events.Event)
 
         try:
             waiter_set = self._waiters[event_type]
         except KeyError:
-            waiter_set = self._waiters[event_type] = set()
+            waiter_set = self._waiters[event_type] = set[_WaiterPairT[base_events.Event]]()
             self._increment_waiter_group_count(event_type, 1)
 
         pair = (predicate, future)
