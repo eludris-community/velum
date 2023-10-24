@@ -4,6 +4,7 @@
 # opt into all the speedup features.
 
 import asyncio
+import os
 
 import uvloop
 
@@ -25,17 +26,17 @@ uvloop.install()
 
 # Finally, we instantiate and run a client as per usual.
 
-client = velum.GatewayClient()
+client = velum.GatewayClient(token=os.environ["TOKEN"])
 
 
 @client.listen()
 async def on_message(event: velum.MessageCreateEvent):
-    if event.author == "velum[speedups]":
+    if event.author == client.gateway.user:
         return
 
     match event.content:  # noqa: E999
         case "!speed":
-            await client.rest.send_message("velum[speedups]", "I am the fast.")
+            await client.rest.send_message("I am the fast.")
 
         case _:
             return

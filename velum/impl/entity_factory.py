@@ -1,3 +1,4 @@
+import ipaddress
 import typing
 
 from velum import models
@@ -12,7 +13,7 @@ class EntityFactory(entity_factory_trait.EntityFactory):
 
     def deserialize_message(self, payload: data_binding.JSONObject) -> models.Message:
         content = typing.cast(str, payload["content"])
-        author = typing.cast(str, payload["author"])
+        author = self.deserialize_user(typing.cast(data_binding.JSONObject, payload["author"]))
 
         return models.Message(content=content, author=author)
 
@@ -171,3 +172,75 @@ class EntityFactory(entity_factory_trait.EntityFactory):
         wait = typing.cast(int, payload["wait"])
 
         return models.RatelimitData(wait=wait)
+
+    def deserialize_session_created(
+        self, payload: data_binding.JSONObject
+    ) -> typing.Tuple[str, models.Session]:
+        token = typing.cast(str, payload["token"])
+        session = self.deserialize_session(typing.cast(data_binding.JSONObject, payload["session"]))
+
+        return token, session
+
+    def deserialize_session(self, payload: data_binding.JSONObject) -> models.Session:
+        id = typing.cast(int, payload["id"])
+        user_id = typing.cast(int, payload["user_id"])
+        platform = typing.cast(str, payload["platform"])
+        client = typing.cast(str, payload["client"])
+        ip = typing.cast(str, payload["ip"])
+
+        return models.Session(
+            id=id,
+            user_id=user_id,
+            platform=platform,
+            client=client,
+            ip=ipaddress.ip_address(ip),
+        )
+
+    def _deserialize_status(self, payload: data_binding.JSONObject) -> models.Status:
+        type = typing.cast(str, payload["type"])
+        text = typing.cast(typing.Optional[str], payload.get("text"))
+
+        return models.Status(type=models.StatusType(type), text=text)
+
+    def deserialize_user(self, payload: data_binding.JSONObject) -> models.User:
+        id = typing.cast(int, payload["id"])
+        username = typing.cast(str, payload["username"])
+        display_name = typing.cast(typing.Optional[str], payload.get("display_name"))
+        social_credit = typing.cast(int, payload["social_credit"])
+        status = self._deserialize_status(typing.cast(data_binding.JSONObject, payload["status"]))
+        bio = typing.cast(typing.Optional[str], payload.get("bio"))
+        avatar = typing.cast(typing.Optional[int], payload.get("avatar"))
+        banner = typing.cast(typing.Optional[int], payload.get("banner"))
+        badges = typing.cast(int, payload["badges"])
+        permissions = typing.cast(int, payload["permissions"])
+        email = typing.cast(typing.Optional[str], payload.get("email"))
+        verified = typing.cast(typing.Optional[bool], payload.get("verified"))
+
+        return models.User(
+            id=id,
+            username=username,
+            display_name=display_name,
+            social_credit=social_credit,
+            status=status,
+            bio=bio,
+            avatar=avatar,
+            banner=banner,
+            badges=badges,
+            permissions=permissions,
+            email=email,
+            verified=verified,
+        )
+
+    def deserialize_authenticated(self, payload: data_binding.JSONObject) -> models.Authenticated:
+        user = self.deserialize_user(typing.cast(data_binding.JSONObject, payload["user"]))
+        users = typing.cast(typing.List[models.User], payload["users"])
+
+        return models.Authenticated(user=user, users=users)
+
+    def deserialize_presence_update(
+        self, payload: data_binding.JSONObject
+    ) -> models.PresenceUpdate:
+        user_id = typing.cast(int, payload["user_id"])
+        status = self._deserialize_status(typing.cast(data_binding.JSONObject, payload["status"]))
+
+        return models.PresenceUpdate(user_id=user_id, status=status)

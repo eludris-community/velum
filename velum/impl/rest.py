@@ -11,6 +11,7 @@ from velum import models
 from velum import routes
 from velum.api import entity_factory_trait
 from velum.api import rest_trait
+from velum.impl import entity_factory as entity_factory_impl
 from velum.internal import data_binding
 
 __all__: typing.Sequence[str] = ("RESTClient",)
@@ -25,6 +26,7 @@ class RESTClient(rest_trait.RESTClient):
     __slots__ = (
         "_entity_factory",
         "_routes",
+        "_token",
         "_session",
     )
 
@@ -35,13 +37,17 @@ class RESTClient(rest_trait.RESTClient):
         *,
         cdn_url: typing.Optional[str] = None,
         rest_url: typing.Optional[str] = None,
-        entity_factory: entity_factory_trait.EntityFactory,
+        token: typing.Optional[str] = None,
+        entity_factory: typing.Optional[entity_factory_trait.EntityFactory] = None,
     ):
-        self._entity_factory = entity_factory
+        self._entity_factory = (
+            entity_factory if entity_factory is not None else entity_factory_impl.EntityFactory()
+        )
         self._routes = {
             routes.OPRISH: rest_url or _REST_URL,
             routes.EFFIS: cdn_url or _CDN_URL,
         }
+        self._token = token
         self._session = None
 
     @property
@@ -88,11 +94,22 @@ class RESTClient(rest_trait.RESTClient):
         self,
         route: routes.CompiledRoute,
         *,
-        query: typing.Optional[typing.Any] = None,
         json: typing.Optional[typing.Any] = None,
         form_builder: typing.Optional[data_binding.FormBuilder] = None,
+        query: typing.Optional[typing.Mapping[str, str]] = None,
     ):
         url = self._complete_route(route)
+        headers: typing.Dict[str, str] = {}
+
+        if route.requires_authentication is not None:
+            # Does not require authentication, but is preferred (higher rate limit).
+            if not route.requires_authentication and self._token is not None:
+                headers["Authorization"] = self._token
+            elif route.requires_authentication:
+                if self._token is None:
+                    raise errors.HTTPError("Cannot use an authenticated route without a token.")
+
+                headers["Authorization"] = self._token
 
         stack = contextlib.AsyncExitStack()
         async with stack:
@@ -104,6 +121,7 @@ class RESTClient(rest_trait.RESTClient):
                 params=query,
                 json=json,
                 data=form,
+                headers=headers,
             )
 
         if 200 <= response.status < 300:
@@ -119,48 +137,8 @@ class RESTClient(rest_trait.RESTClient):
 
         raise errors.HTTPError("get good lol")
 
-    @typing.overload
-    async def send_message(self, *, message: models.Message) -> None:
-        ...
-
-    @typing.overload
-    async def send_message(
-        self,
-        author: str,
-        message: str,
-    ) -> None:
-        ...
-
-    async def send_message(
-        self,
-        author: typing.Optional[str] = None,
-        message: typing.Optional[models.Message | str] = None,
-    ) -> None:
-        if isinstance(message, models.Message):
-            body = {
-                "author": message.author,
-                "content": message.content,
-            }
-        elif author is not None:
-            body = {
-                "author": author,
-                "content": message,
-            }
-        else:
-            raise TypeError(
-                f"Please provide either a fully qualified {models.Message.__qualname__}, "
-                "or an author and a message string."
-            )
-
-        await self._request(routes.POST_MESSAGE.compile(), json=body)
-
-    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
-        query = {"ratelimits": "1"} if rate_limits else None
-        response = await self._request(routes.GET_INFO.compile(), query=query)
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_instance_info(response)
-
-    # Effis.
+    # Ordered by docs.
+    # Files.
 
     async def upload_to_bucket(
         self,
@@ -209,3 +187,117 @@ class RESTClient(rest_trait.RESTClient):
     async def fetch_static_file(self, name: str) -> files.URL:
         url = self._complete_route(routes.GET_FILE_INFO.compile(name=name))
         return files.URL(url)
+
+    # Instance.
+
+    async def get_instance_info(self, rate_limits: bool = False) -> models.InstanceInfo:
+        query = {"ratelimits": "1"} if rate_limits else {}
+        response = await self._request(routes.GET_INFO.compile(), query=query)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_instance_info(response)
+
+    # Messaging.
+
+    async def send_message(self, content: str) -> models.Message:
+        body = {"content": content}
+        response = await self._request(routes.CREATE_MESSAGE.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    # Sessions
+
+    async def create_session(
+        self, *, identifier: str, password: str, platform: str = "python", client: str = "velum"
+    ) -> typing.Tuple[str, models.Session]:
+        body = {
+            "identifier": identifier,
+            "password": password,
+            "platform": platform,
+            "client": client,
+        }
+        response = await self._request(routes.CREATE_SESSION.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_session_created(response)
+
+    async def delete_session(self, *, id: int) -> None:
+        await self._request(routes.DELETE_SESSION.compile(id=id))
+
+    async def get_sessions(self) -> typing.Sequence[models.Session]:
+        response = await self._request(routes.GET_SESSIONS.compile())
+        assert isinstance(response, list)
+        return [
+            self._entity_factory.deserialize_session(typing.cast(data_binding.JSONObject, session))
+            for session in response
+        ]
+
+    # Users
+
+    async def create_user(
+        self,
+        *,
+        username: str,
+        email: str,
+        password: str,
+    ) -> models.User:
+        body = {"username": username, "email": email, "password": password}
+        response = await self._request(routes.CREATE_USER.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def delete_user(self, password: str) -> None:
+        body = {"password": password}
+        await self._request(routes.DELETE_USER.compile(), json=body)
+
+    async def get_self(self) -> models.User:
+        response = await self._request(routes.GET_SELF.compile())
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def get_user(self, identifier: typing.Union[int, str], /) -> models.User:
+        response = await self._request(routes.GET_USER.compile(identifier=identifier))
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def update_profile(
+        self,
+        *,
+        display_name: typing.Optional[str] = None,
+        status: typing.Optional[str] = None,
+        status_type: typing.Optional[models.StatusType] = None,
+        bio: typing.Optional[str] = None,
+        avatar: typing.Optional[int] = None,
+        banner: typing.Optional[int] = None,
+    ) -> models.User:
+        body = {
+            "display_name": display_name,
+            "status": status,
+            "status_type": status_type,
+            "bio": bio,
+            "avatar": avatar,
+            "banner": banner,
+        }
+        response = await self._request(routes.UPDATE_PROFILE.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def update_user(
+        self,
+        *,
+        password: str,
+        username: typing.Optional[str] = None,
+        email: typing.Optional[str] = None,
+        new_password: typing.Optional[str] = None,
+    ) -> models.User:
+        body = {
+            "password": password,
+            "username": username,
+            "email": email,
+            "new_password": new_password,
+        }
+        response = await self._request(routes.UPDATE_USER.compile(), json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_user(response)
+
+    async def verify_user(self, *, code: int) -> None:
+        query = {"code": str(code)}
+        await self._request(routes.VERIFY_USER.compile(), query=query)

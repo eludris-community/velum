@@ -1,4 +1,5 @@
 import asyncio
+import os
 import typing
 
 import velum
@@ -8,13 +9,13 @@ import velum
 # which is an event type that is automatically dispatched when any normal
 # event raises an exception.
 
-client = velum.GatewayClient()
+client = velum.GatewayClient(token=os.environ["TOKEN"])
 
 
 @client.listen()
 async def broken_listener(event: velum.MessageCreateEvent) -> None:
     # For the sake of illustration, we immediately raise an exception.
-    if event.author != "Velum":
+    if event.author != client.gateway.user:
         raise Exception("Oops!")
 
 
@@ -27,7 +28,6 @@ async def broken_listener(event: velum.MessageCreateEvent) -> None:
 async def exception_handler(event: velum.ExceptionEvent[typing.Any]) -> None:
     if isinstance(event.failed_event, velum.MessageCreateEvent):
         await client.rest.send_message(
-            "Velum",
             f"Listener {event.failed_callback.__name__} raised an exception: {event.exception!r}",
         )
 
