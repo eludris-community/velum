@@ -155,10 +155,10 @@ class FileMetadata:
     type: str = attr.field()
     """The type of file. Can be any of "text", "image", "video", or "other"."""
 
-    width: typing.Optional[int] = attr.field(default=None)
+    width: int | None = attr.field(default=None)
     """The width of the file. Only available for files of types "image" or "video"."""
 
-    height: typing.Optional[int] = attr.field(default=None)
+    height: int | None = attr.field(default=None)
     """The height of the file. Only available for files of types "image" or "video"."""
 
 
@@ -206,7 +206,7 @@ class InstanceInfo:
     instance_name: str = attr.field()
     """The name of the connected Eludris instance."""
 
-    description: typing.Optional[str] = attr.field()
+    description: str | None = attr.field()
     """The description of the connected Eludris instance."""
 
     version: str = attr.field()
@@ -230,7 +230,7 @@ class InstanceInfo:
     attachment_file_size: int = attr.field()
     """The maximum attachment file size that can be uploaded to the connected instance's CDN."""
 
-    rate_limits: typing.Optional[InstanceRatelimits] = attr.field()
+    rate_limits: InstanceRatelimits | None = attr.field()
     """The ratelimits that apply to the connected Eludris instance."""
 
 
@@ -250,7 +250,7 @@ class Session:
     client: str
     """The client the session was created by."""
 
-    ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+    ip: ipaddress.IPv4Address | ipaddress.IPv6Address
     """The IP address the session was created from."""
 
 
@@ -277,7 +277,7 @@ class Status:
     type: StatusType = attr.field()
     """The type of the status."""
 
-    text: typing.Optional[str] = attr.field()
+    text: str | None = attr.field()
     """The text of the status."""
 
 
@@ -291,7 +291,7 @@ class User:
     username: str
     """The username of the user."""
 
-    display_name: typing.Optional[str] = attr.field(default=None)
+    display_name: str | None = attr.field(default=None)
     """The display name of the user."""
 
     social_credit: int
@@ -300,13 +300,13 @@ class User:
     status: Status
     """The status of the user."""
 
-    bio: typing.Optional[str] = attr.field(default=None)
+    bio: str | None = attr.field(default=None)
     """The bio of the user."""
 
-    avatar: typing.Optional[int] = attr.field(default=None)
+    avatar: int | None = attr.field(default=None)
     """The avatar of the user."""
 
-    banner: typing.Optional[int] = attr.field(default=None)
+    banner: int | None = attr.field(default=None)
     """The banner of the user."""
 
     badges: int
@@ -315,13 +315,13 @@ class User:
     permissions: int
     """The permissions of the user."""
 
-    email: typing.Optional[str] = attr.field(default=None)
+    email: str | None = attr.field(default=None)
     """The email of the user.
 
     This is only available when getting the data of the currently authenticated user.
     """
 
-    verified: typing.Optional[bool] = attr.field(default=None)
+    verified: bool | None = attr.field(default=None)
     """Whether or not the user is verified.
 
     This is only available when getting the data of the currently authenticated user.

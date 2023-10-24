@@ -22,7 +22,7 @@ __all__: typing.Sequence[str] = ("GatewayClient",)
 
 
 _T = typing.TypeVar("_T")
-_MaybeType = typing.Optional[type[_T]]
+_MaybeType = type[_T] | None
 
 
 _LOGGER = logging.getLogger("velum.client")

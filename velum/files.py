@@ -35,22 +35,22 @@ PathLike = os.PathLike[str] | str
 RawData = bytes | bytearray | memoryview | io.BytesIO | io.StringIO
 ResourceLike = typing.Union["Resource[typing.Any]", PathLike, RawData]
 
-LazyByteIterator = typing.Union[
-    typing.AsyncIterator[bytes],
-    typing.AsyncIterable[bytes],
-    typing.Iterator[bytes],
-    typing.Iterable[bytes],
-    typing.AsyncIterator[str],
-    typing.AsyncIterable[str],
-    typing.Iterator[str],
-    typing.Iterable[str],
-    typing.AsyncGenerator[bytes, typing.Any],
-    typing.Generator[bytes, typing.Any, typing.Any],
-    typing.AsyncGenerator[str, typing.Any],
-    typing.Generator[str, typing.Any, typing.Any],
-    asyncio.StreamReader,
-    aiohttp.StreamReader,
-]
+LazyByteIterator = (
+    typing.AsyncIterator[bytes]
+    | typing.AsyncIterable[bytes]
+    | typing.Iterator[bytes]
+    | typing.Iterable[bytes]
+    | typing.AsyncIterator[str]
+    | typing.AsyncIterable[str]
+    | typing.Iterator[str]
+    | typing.Iterable[str]
+    | typing.AsyncGenerator[bytes, typing.Any]
+    | typing.Generator[bytes, typing.Any, typing.Any]
+    | typing.AsyncGenerator[str, typing.Any]
+    | typing.Generator[str, typing.Any, typing.Any]
+    | asyncio.StreamReader
+    | aiohttp.StreamReader
+)
 
 _BUFFER_SIZE: typing.Final[int] = 50 << 10
 
