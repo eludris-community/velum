@@ -92,7 +92,10 @@ convention = "numpy"
 [tool.ruff.per-file-ignores]
 "__init__.py" = [
     # Wildcard imports are fine in __init__; duplicating exports is a pain to maintain.
-    "F403", "F405",
+    "F403",
+    "F405",
+    # Allow re-exporting modules.
+    "PLC0414",
 ]
 
 [tool.ruff.isort]
