@@ -12,34 +12,44 @@ EventT = typing.TypeVar("EventT", bound="Event")
 EventCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]
 
 
+_id_counter = 1
+
+
 class Event(abc.ABC):
     """Base type for all events"""
 
     __slots__ = ()
 
-    __id_counter: int = 0
-
-    bitmask: int
-    dispatches: tuple[type[Event], ...]
+    bitmask: typing.ClassVar[int]
+    dispatches: typing.ClassVar[typing.Sequence[type[Event]]]
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
+
+        # NOTE: cls.dispatches contains the event `cls` itself.
+        # This needs to be run every time __init_subclass__ is run for two reasons:
+        #    1. We need to make sure that this is set when attrs.define
+        #       finalises the class to ensure that the event itself in the tuple
+        #       is actually finalised.
+        #    2. As not all event classes are decorated with attrs.define, we
+        #       must also set it in the original run, as otherwise cls.dispatches
+        #       would not be set at all.
+        cls.dispatches = tuple(sub_cls for sub_cls in cls.mro() if issubclass(sub_cls, Event))
 
         if "__attrs_attrs__" in cls.__dict__:
             # attrs runs __new__ a second time on class creation, and we don't
             # need to increment the bitmask again.
             return
 
-        # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
-        # Non-event classes should be ignored.
-        cls.dispatches = tuple(sub_cls for sub_cls in cls.mro() if issubclass(sub_cls, Event))
-        cls.bitmask = 1 << cls.__id_counter
+        global _id_counter  # noqa: PLW0603
 
-        cls.__id_counter += 1
+        cls.bitmask = 1 << _id_counter
+        _id_counter += 1
 
 
 # Set event parameters on the actual event class.
-Event.__init_subclass__()
+Event.dispatches = (Event,)
+Event.bitmask = 1
 
 
 @attr.define(kw_only=True, weakref_slot=False)
