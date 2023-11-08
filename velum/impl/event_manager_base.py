@@ -118,17 +118,10 @@ def is_consumer_for(
 ) -> typing.Callable[[UnboundConsumerCallback[_EventManagerT]], Consumer[_EventManagerT]]:
     # Get all event subtypes dispatched by the provided events and eliminate
     # duplicates...
-    event_types = tuple(
-        {
-            subtype
-            for event_type in event_types
-            for subtype in event_type.dispatches  # fmt: skip
-        },
-    )
-
     bitmask = 0
     for event_type in event_types:
-        bitmask |= event_type.bitmask
+        for dispatched_event in event_type.dispatches:
+            bitmask |= dispatched_event.bitmask
 
     def wrapper(
         callback: UnboundConsumerCallback[_EventManagerT],
@@ -226,7 +219,7 @@ class EventManagerBase(event_manager_trait.EventManager):
                 )
 
                 _LOGGER.debug(
-                    "An exception occorued while handling event '%s'.",
+                    "An exception occurred while handling event '%s'.",
                     type(event).__name__,
                 )
                 await self.dispatch(exception_event)

@@ -426,7 +426,7 @@ class GatewayHandler(gateway_trait.GatewayHandler):
         try:
             await asyncio.wait_for(self._authenticated_event.wait(), timeout=10.0)
         except asyncio.TimeoutError:
-            msg = "Failed to authenticate with the gateway."
+            msg = "Failed to authenticate with the gateway: Connection timed out."
             raise errors.GatewayConnectionError(msg) from None
 
         # Indicate connection logic is done.
